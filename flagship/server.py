@@ -330,6 +330,38 @@ class Handler(SimpleHTTPRequestHandler):
                 for p in tmp_paths:
                     try: Path(p).unlink()
                     except OSError: pass
+        # ——— Matchering reference mastering (local only) ———
+        if self.path.split("?")[0] == "/api/master":
+            import subprocess, tempfile, base64
+            MG_PY = str(ROOT.parent / ".venv-mg" / "bin" / "python")
+            BRIDGE = str(ROOT.parent / "tools" / "mastering_bridge.py")
+            tmp_paths = []
+            try:
+                if not Path(MG_PY).exists():
+                    return self._json(503, {"ok": False, "error": "matchering venv not installed (~/Projects/loop-tisch/.venv-mg)"})
+                length = int(self.headers.get("Content-Length") or 0)
+                payload = json.loads(self.rfile.read(length).decode("utf-8") or "{}")
+                for key, suffix in (("wav_target", "t"), ("wav_ref", "r")):
+                    raw = base64.b64decode(payload.get(key) or "")
+                    with tempfile.NamedTemporaryFile(suffix=f"-{suffix}.wav", delete=False) as f:
+                        f.write(raw); tmp_paths.append(f.name)
+                out_path = tmp_paths[0].replace("-t.wav", "-mastered.wav")
+                tmp_paths.append(out_path)
+                proc = subprocess.run(
+                    [MG_PY, BRIDGE, tmp_paths[0], tmp_paths[1], out_path],
+                    capture_output=True, text=True, timeout=300,
+                )
+                out = json.loads(proc.stdout or "{}")
+                if out.get("ok") and Path(out_path).exists():
+                    out["wav_mastered"] = base64.b64encode(Path(out_path).read_bytes()).decode()
+                    out["engine"] = "matchering 2.0 (reference mastering)"
+                return self._json(200 if out.get("ok") else 500, out)
+            except Exception as e:
+                return self._json(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
+            finally:
+                for p in tmp_paths:
+                    try: Path(p).unlink()
+                    except OSError: pass
         if self.path.split("?")[0] != "/api/chat":
             self.send_error(404)
             return

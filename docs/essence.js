@@ -202,5 +202,23 @@
     return new Blob([ab], { type: 'audio/wav' });
   }
 
-  global.LT_ESSENCE = { signatureFromBuffer, essenceDelta, chromaAndKey, wavFromBuffer };
+  /** chunked base64 (safe for multi-MB audio, no spread/stack blowup) */
+  function b64encode(ab) {
+    const u8 = new Uint8Array(ab);
+    const CH = 0x8000;
+    let s = '';
+    for (let i = 0; i < u8.length; i += CH) {
+      s += String.fromCharCode.apply(null, u8.subarray(i, i + CH));
+    }
+    return btoa(s);
+  }
+
+  function b64decodeToBytes(b64) {
+    const bin = atob(b64);
+    const u8 = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+    return u8;
+  }
+
+  global.LT_ESSENCE = { signatureFromBuffer, essenceDelta, chromaAndKey, wavFromBuffer, b64encode, b64decodeToBytes };
 })(window);

@@ -157,6 +157,40 @@
         return true;
       }],
     ]),
+
+    /** ref_master: matchering 2.0 — last forge render vs selected pad reference (local) */
+    ref_master: () => runChain('REF-MASTER (Matchering)', [
+      ['Target + Referenz prüfen', async () => {
+        if (!state.lastForge?.buffer) throw new Error('kein Forge-Render — erst FORGE drücken');
+        const ref = bufferOf(selectedPadSample());
+        if (!ref) throw new Error('Referenz-Pad ohne Sample');
+        return { target: state.lastForge.buffer, ref };
+      }],
+      ['Matchering mastered (lokal)', async ({ target, ref }) => {
+        const [ta, ra] = await Promise.all([
+          LT_ESSENCE.wavFromBuffer(target).arrayBuffer(),
+          LT_ESSENCE.wavFromBuffer(ref).arrayBuffer(),
+        ]);
+        const r = await fetch('api/master', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wav_target: LT_ESSENCE.b64encode(ta), wav_ref: LT_ESSENCE.b64encode(ra) }),
+        });
+        const d = await r.json();
+        if (!d.ok) throw new Error(d.error || 'master failed');
+        const raw = LT_ESSENCE.b64decodeToBytes(d.wav_mastered);
+        const buf = await LT.engine.ctx.decodeAudioData(raw.buffer);
+        LT.addMsg('Master', `Matchering ✓ ${d.engine} · Referenz nur als Analyse, kein Audio aus der Referenz im Output`);
+        return buf;
+      }],
+      ['Import mastered', async (buf) => {
+        const m = importBuffer(buf, `mastered-${state.lastForge.meta.seed.toString(36)}`, {
+          license: 'matchering-master · target=forge (lizenzfrei) · referenz=analyse-only',
+        });
+        LT.project.detect_onsets(m.id);
+        LT.renderAll();
+        return m;
+      }],
+    ]),
   };
 
   // ——— suggestion rules ———

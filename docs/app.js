@@ -1074,10 +1074,9 @@
       try {
         const [a, b] = [LT_ESSENCE.wavFromBuffer(refBuffer), LT_ESSENCE.wavFromBuffer(forgedBuffer)];
         const [ra, rb] = await Promise.all([a.arrayBuffer(), b.arrayBuffer()]);
-        const b64 = (ab) => btoa(String.fromCharCode(...new Uint8Array(ab)));
         const r = await fetch('api/essence/delta', {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ wav_a: b64(ra), wav_b: b64(rb) }),
+          body: JSON.stringify({ wav_a: LT_ESSENCE.b64encode(ra), wav_b: LT_ESSENCE.b64encode(rb) }),
         });
         const d = await r.json();
         if (d.ok && d.pairs?.length) return { engine: true, distance: d.pairs[0].distance, similarity: d.pairs[0].similarity, relation: d.pairs[0].relation };
@@ -1216,6 +1215,7 @@
       addMsg('Mixer', `Auto-Mix: ${res.length} Pads gain-gestaged (RMS-Rollen)`);
       renderMixer();
     };
+    $('#btnRefMaster') && ($('#btnRefMaster').onclick = () => window.LT_COPILOT_API?.chains.ref_master());
 
     // Spectrum im Header
     const spec = $('#spec');
