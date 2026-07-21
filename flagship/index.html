@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LOOPTiSCH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="looptisch.css" />
+</head>
+<body>
+  <div id="dropOverlay" class="drop-overlay" hidden>
+    <div class="drop-card">
+      <div class="drop-ico" aria-hidden="true"></div>
+      <b>Samples reinziehen</b>
+      <span>WAV · AIFF · MP3 · OGG — Onset & BPM lokal</span>
+    </div>
+  </div>
+
+  <div id="app">
+    <!-- ===== RACK TRANSPORT ===== -->
+    <header class="rack" role="banner">
+      <div class="rack-brand">
+        <div class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div>
+          <div class="logo-name">LOOPTiSCH</div>
+          <div class="logo-sub">v4 · cooperative instrument</div>
+        </div>
+      </div>
+
+      <div class="rack-transport">
+        <button type="button" class="hw-btn" id="btnStop" title="Stop" aria-label="Stop">
+          <svg width="11" height="11" viewBox="0 0 11 11"><rect width="11" height="11" rx="1" fill="currentColor"/></svg>
+        </button>
+        <button type="button" class="hw-btn play" id="btnPlay" aria-pressed="false" title="Play (Space)" aria-label="Play">
+          <svg class="i-play" width="13" height="13" viewBox="0 0 13 13"><path d="M2.5 1.2v10.6L11.5 6.5 2.5 1.2z" fill="currentColor"/></svg>
+          <svg class="i-pause" width="13" height="13" viewBox="0 0 13 13" hidden><rect x="2.5" y="1.5" width="3" height="10" rx="0.5" fill="currentColor"/><rect x="7.5" y="1.5" width="3" height="10" rx="0.5" fill="currentColor"/></svg>
+        </button>
+        <button type="button" class="hw-btn rec" id="btnRec" aria-pressed="false" title="Pattern record" aria-label="Record">REC</button>
+        <div class="hw-sep"></div>
+        <label class="hw-field">
+          <span>BPM</span>
+          <input id="bpmIn" type="number" min="40" max="220" value="92" />
+        </label>
+        <button type="button" class="hw-chip" id="btnTap">TAP</button>
+        <label class="hw-field">
+          <span>KEY</span>
+          <select id="keyIn">
+            <option>Am</option><option>Cm</option><option>Dm</option><option>Em</option>
+            <option>Fm</option><option>Gm</option><option>C</option><option>D</option>
+            <option>E</option><option>F</option><option>G</option><option>A</option><option>Bb</option>
+          </select>
+        </label>
+        <label class="hw-field swing">
+          <span>SWING</span>
+          <input id="swingIn" type="range" min="50" max="72" value="58" />
+          <b id="swingVal">58</b>
+        </label>
+        <div class="hw-sep"></div>
+        <label class="hw-field master">
+          <span>DRIVE</span>
+          <input id="driveIn" type="range" min="0" max="100" value="22" />
+        </label>
+        <label class="hw-field master">
+          <span>VOL</span>
+          <input id="volIn" type="range" min="0" max="100" value="78" />
+        </label>
+        <div class="hw-sep"></div>
+        <button type="button" class="hw-chip" id="btnUndo" title="Undo (⌘Z)">UNDO</button>
+        <button type="button" class="hw-chip" id="btnRedo" title="Redo (⇧⌘Z)">REDO</button>
+      </div>
+
+      <div class="rack-readout">
+        <div class="led-clock" id="clock">01.01</div>
+        <div class="led-time" id="clockTime">00:00</div>
+        <div class="vu" aria-hidden="true">
+          <div class="vu-track"><i id="mL"></i></div>
+          <div class="vu-track"><i id="mR"></i></div>
+        </div>
+        <div class="mode-seg" role="tablist">
+          <button type="button" class="on" data-mode="perform" role="tab" aria-selected="true">PADS</button>
+          <button type="button" data-mode="arrange" role="tab" aria-selected="false">ARRANGE</button>
+          <button type="button" data-mode="chop" role="tab" aria-selected="false">CHOP</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="body">
+      <!-- ===== LIBRARY ===== -->
+      <aside class="col lib" aria-label="Library">
+        <div class="col-h">
+          <h2>Library</h2>
+          <span class="led-pill" id="libCount">0</span>
+        </div>
+        <div class="lib-ctrl">
+          <input id="libSearch" type="search" placeholder="Search tags…" autocomplete="off" />
+          <div class="seg-filters" id="filters">
+            <button type="button" class="on" data-f="all">ALL</button>
+            <button type="button" data-f="kick">KD</button>
+            <button type="button" data-f="snare">SN</button>
+            <button type="button" data-f="hat">HH</button>
+            <button type="button" data-f="perc">PC</button>
+            <button type="button" data-f="melodic">ML</button>
+            <button type="button" data-f="loop">LP</button>
+            <button type="button" data-f="real">●</button>
+          </div>
+          <label class="import-slot">
+            <span>+ IMPORT</span>
+            <input id="fileIn" type="file" accept="audio/*,.wav,.aif,.aiff,.mp3,.ogg,.flac" multiple hidden />
+          </label>
+          <div class="pack-row">
+            <select id="packSel" class="pack-sel" title="Pack filtern">
+              <option value="">ALLE PACKS</option>
+            </select>
+            <button type="button" class="mini accent" id="btnLoadPack" disabled>KIT ▶ PADS</button>
+          </div>
+        </div>
+        <div class="lib-list" id="libList"></div>
+        <button type="button" class="slot-btn" id="btnRescan">RESCAN LIBRARY</button>
+      </aside>
+
+      <!-- ===== STAGE ===== -->
+      <main class="col stage" aria-label="Stage">
+        <!-- Missions: layperson front door -->
+        <div class="missions" id="missions" aria-label="Missions"></div>
+        <div class="plan-panel" id="planPanel" hidden>
+          <div class="plan-head">
+            <div>
+              <div class="plan-agent" id="planAgent">Host</div>
+              <div class="plan-say" id="planSay">—</div>
+            </div>
+            <button type="button" class="mini" id="btnPlanDismiss">SCHLIESSEN</button>
+          </div>
+          <div class="plan-steps" id="planSteps"></div>
+          <div class="plan-options" id="planOptions" hidden></div>
+          <div class="plan-actions">
+            <button type="button" class="mini" id="btnPlanUndo">UNDO PLAN</button>
+            <button type="button" class="mini accent" id="btnPlanPlay">▶ HÖREN</button>
+          </div>
+        </div>
+
+        <section class="view on" id="viewPerform" data-view="perform">
+          <div class="deck-head">
+            <div>
+              <h2>Pad deck</h2>
+              <p class="deck-sub">Bank <b id="bankLabel">A</b> · Pattern <b id="patLabel">A1</b> · Velocity = Y-axis</p>
+            </div>
+            <div class="deck-actions">
+              <button type="button" class="mini" data-bank="A">A</button>
+              <button type="button" class="mini" data-bank="B">B</button>
+              <span class="vsep"></span>
+              <button type="button" class="mini" data-pat="A1">A1</button>
+              <button type="button" class="mini" data-pat="A2">A2</button>
+              <button type="button" class="mini" data-pat="B1">B1</button>
+              <button type="button" class="mini" id="btnClearPat">CLR</button>
+              <button type="button" class="mini" id="btnLen">16</button>
+            </div>
+          </div>
+
+          <div class="pad-deck">
+            <div class="pads" id="pads"></div>
+            <div class="mixer" id="mixer" aria-label="Track mixer"></div>
+          </div>
+
+          <div class="seq-panel">
+            <div class="seq-top">
+              <h2>Step matrix</h2>
+              <div class="seq-legend">
+                <span><i class="lg on"></i> on</span>
+                <span><i class="lg ph"></i> playhead</span>
+                <span class="hint-keys"><kbd>1</kbd>–<kbd>V</kbd> pads · <kbd>Space</kbd> play · <kbd>M</kbd> mute sel</span>
+              </div>
+            </div>
+            <div class="seq-scroll">
+              <div class="seq-grid" id="seqGrid"></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="view" id="viewArrange" data-view="arrange" hidden>
+          <div class="deck-head">
+            <div>
+              <h2>Arrangement</h2>
+              <p class="deck-sub">8 bars · click cycles A1 → A2 → B1 → empty</p>
+            </div>
+            <div class="deck-actions">
+              <button type="button" class="mini" id="btnArrClear">CLR</button>
+              <button type="button" class="mini accent" id="btnArrBuild">BUILD DROP</button>
+            </div>
+          </div>
+          <div class="arrange" id="arrange"></div>
+        </section>
+
+        <section class="view" id="viewChop" data-view="chop" hidden>
+          <div class="deck-head">
+            <div>
+              <h2>Chop lab</h2>
+              <p class="deck-sub" id="chopName">no sample</p>
+            </div>
+            <div class="deck-actions">
+              <button type="button" class="mini" id="btnDetect">DETECT</button>
+              <button type="button" class="mini accent" id="btnMapChops">MAP 9–16</button>
+            </div>
+          </div>
+          <div class="wave-frame">
+            <canvas id="wave" width="1400" height="220" aria-label="Waveform"></canvas>
+          </div>
+          <div class="chop-meta" id="chopMeta">Import or select a loop</div>
+        </section>
+      </main>
+
+      <!-- ===== CREW ===== -->
+      <aside class="col crew-col" aria-label="Crew">
+        <div class="col-h">
+          <h2>Crew</h2>
+          <span class="led-pill data" id="agentStatus">IDLE</span>
+        </div>
+
+        <div class="llm-row">
+          <label class="llm-sw">
+            <input type="checkbox" id="useLlm" checked />
+            <span>LLM</span>
+          </label>
+          <span class="llm-meta" id="llmMeta">…</span>
+        </div>
+
+        <div class="crew-grid" id="crew">
+          <button type="button" class="crew" data-mission="first_beat">
+            <b>Host</b><span>first beat</span>
+          </button>
+          <button type="button" class="crew" data-mission="break_to_kit">
+            <b>Chopper</b><span>break → kit</span>
+          </button>
+          <button type="button" class="crew" data-mission="drop_builder">
+            <b>Arranger</b><span>drop form</span>
+          </button>
+          <button type="button" class="crew" data-mission="genre_skin">
+            <b>Remixer</b><span>genre · A/B</span>
+          </button>
+          <button type="button" class="crew" data-mission="fix_mix">
+            <b>Mixer</b><span>fix mix</span>
+          </button>
+          <button type="button" class="crew" data-mission="finish_export">
+            <b>Export</b><span>finish</span>
+          </button>
+        </div>
+
+        <div class="insp">
+          <div class="insp-h">Selection</div>
+          <dl id="inspDl"></dl>
+        </div>
+
+        <div class="tlog">
+          <div class="tlog-h"><span>Tool bus</span><button type="button" class="x" id="btnClearLog">clr</button></div>
+          <div class="tlog-b" id="toolLog"></div>
+        </div>
+
+        <div class="chat">
+          <div class="msgs" id="msgs"></div>
+          <form class="compose" id="chatForm">
+            <input id="chatIn" type="text" placeholder="Sag der Crew was du willst…" autocomplete="off" />
+            <button type="submit" class="go">GO</button>
+          </form>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script src="analyze.js"></script>
+  <script src="engine.js"></script>
+  <script src="coop.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

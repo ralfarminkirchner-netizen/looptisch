@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LOOPTiSCH — 001 MPC Workbench</title>
+<style>
+  :root {
+    --bg: #0c0d10;
+    --panel: #14161c;
+    --panel2: #1a1d26;
+    --border: #2a2f3a;
+    --text: #e8eaef;
+    --muted: #8b93a7;
+    --amber: #f0a030;
+    --amber-dim: #8a5a18;
+    --cyan: #5ec8d8;
+    --green: #3dcf8e;
+    --danger: #e85d5d;
+    --pad: #1e222d;
+    --pad-lit: #3a2a12;
+    --radius: 10px;
+    --font: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    display: grid;
+    grid-template-rows: 52px 1fr 160px;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; color: inherit; cursor: pointer; border: none; background: none; }
+  .top {
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 16px; border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #12141a, #0e1015);
+  }
+  .brand { font-weight: 650; letter-spacing: 0.04em; font-size: 13px; }
+  .brand span { color: var(--amber); }
+  .badge {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); border: 1px solid var(--border); padding: 3px 8px; border-radius: 999px;
+  }
+  .transport { display: flex; align-items: center; gap: 8px; margin-left: 8px; }
+  .tbtn {
+    width: 36px; height: 36px; border-radius: 8px; background: var(--panel2);
+    border: 1px solid var(--border); display: grid; place-items: center; font-size: 14px;
+  }
+  .tbtn.play[aria-pressed="true"] { background: #1a3a28; border-color: var(--green); color: var(--green); }
+  .meter {
+    display: flex; gap: 14px; margin-left: auto; font-family: var(--mono); font-size: 12px; color: var(--cyan);
+  }
+  .meter b { color: var(--text); font-weight: 600; }
+  .main {
+    display: grid;
+    grid-template-columns: 240px 1fr 260px;
+    min-height: 0;
+  }
+  .panel {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .panel:last-child { border-right: none; border-left: 1px solid var(--border); }
+  .panel h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--muted); padding: 12px 14px 8px; font-weight: 600;
+  }
+  .lib { overflow: auto; padding: 0 8px 12px; flex: 1; }
+  .sample {
+    display: grid; grid-template-columns: 1fr auto; gap: 2px 8px;
+    padding: 10px 10px; border-radius: 8px; border: 1px solid transparent;
+    cursor: grab; margin-bottom: 4px;
+  }
+  .sample:hover, .sample.selected { background: var(--panel2); border-color: var(--border); }
+  .sample .name { font-size: 13px; font-weight: 550; }
+  .sample .meta { grid-column: 1 / -1; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 4px;
+    background: #243040; color: var(--cyan); align-self: start;
+  }
+  .tag.kick { background: #3a2418; color: #f0a070; }
+  .tag.snare { background: #2a2a18; color: #d8c050; }
+  .tag.hat { background: #1a2a2a; color: #70d0c0; }
+  .tag.loop { background: #2a1a30; color: #c090e0; }
+  .center {
+    display: grid; grid-template-rows: auto 1fr auto; padding: 16px 20px; gap: 14px; min-height: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% 40%, #161922 0%, transparent 70%),
+      var(--bg);
+  }
+  .pads {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px; max-width: 520px; width: 100%; margin: 0 auto; align-content: center;
+  }
+  .pad {
+    aspect-ratio: 1;
+    background: linear-gradient(160deg, #252a36, var(--pad));
+    border: 1px solid #333948;
+    border-radius: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 20px rgba(0,0,0,0.35);
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 10px; position: relative; user-select: none; touch-action: manipulation;
+  }
+  .pad:active, .pad.hit {
+    background: linear-gradient(160deg, #5a3a12, var(--pad-lit));
+    border-color: var(--amber);
+    transform: translateY(1px);
+  }
+  .pad.empty { opacity: 0.55; }
+  .pad .n { position: absolute; top: 8px; left: 10px; font-size: 11px; color: var(--muted); font-family: var(--mono); }
+  .pad .lbl { font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pad .sub { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+  .seq-wrap {
+    max-width: 720px; width: 100%; margin: 0 auto;
+    background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px;
+  }
+  .seq-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 12px; color: var(--muted); }
+  .steps { display: grid; grid-template-columns: repeat(16, 1fr); gap: 4px; }
+  .step {
+    height: 36px; border-radius: 4px; background: #12151c; border: 1px solid #252a36;
+  }
+  .step.on { background: linear-gradient(180deg, #d89030, #a06018); border-color: var(--amber); }
+  .step.playhead { outline: 2px solid var(--cyan); outline-offset: 1px; }
+  .step.bar { box-shadow: inset 2px 0 0 #3a4255; }
+  .inspector { padding: 0 14px 14px; overflow: auto; font-size: 13px; }
+  .kv { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 14px; }
+  .kv div {
+    background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px;
+  }
+  .kv label { display: block; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+  .kv strong { font-family: var(--mono); font-size: 16px; color: var(--cyan); }
+  .hint { color: var(--muted); font-size: 12px; line-height: 1.45; margin-bottom: 12px; }
+  .ai-suggest {
+    border: 1px dashed #3a4558; border-radius: 8px; padding: 10px; background: #121820; margin-bottom: 10px;
+  }
+  .ai-suggest h3 { font-size: 11px; color: var(--amber); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px; padding: 6px 10px; border-radius: 999px;
+    background: #243040; border: 1px solid #354458; color: var(--text);
+  }
+  .chip:hover { border-color: var(--cyan); color: var(--cyan); }
+  .dock {
+    border-top: 1px solid var(--border);
+    background: #10131a;
+    display: grid; grid-template-columns: 1fr 280px; min-height: 0;
+  }
+  .chat { display: flex; flex-direction: column; padding: 10px 14px; gap: 8px; min-height: 0; }
+  .msgs { flex: 1; overflow: auto; font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+  .msg { max-width: 90%; padding: 8px 10px; border-radius: 10px; line-height: 1.4; }
+  .msg.bot { background: var(--panel2); border: 1px solid var(--border); align-self: flex-start; }
+  .msg.user { background: #2a2418; border: 1px solid #4a3a20; align-self: flex-end; color: #f5e6c8; }
+  .msg .who { font-size: 10px; color: var(--muted); margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .compose { display: flex; gap: 8px; }
+  .compose input {
+    flex: 1; background: var(--panel); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; color: var(--text); outline: none;
+  }
+  .compose input:focus { border-color: var(--cyan); }
+  .compose button, .go {
+    background: var(--amber); color: #1a1000; font-weight: 700; border-radius: 8px; padding: 0 16px;
+  }
+  .quick { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-left: 1px solid var(--border); }
+  .quick h2 { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .qbtn {
+    text-align: left; padding: 8px 10px; border-radius: 8px; background: var(--panel2);
+    border: 1px solid var(--border); font-size: 12px;
+  }
+  .qbtn:hover { border-color: var(--amber); }
+  .toast {
+    position: fixed; bottom: 180px; left: 50%; transform: translateX(-50%);
+    background: #1a3028; border: 1px solid var(--green); color: var(--green);
+    padding: 8px 14px; border-radius: 999px; font-size: 12px; opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 960px) {
+    .main { grid-template-columns: 1fr; }
+    .panel { display: none; }
+    .panel.center-show, .center { display: grid; }
+    .dock { grid-template-columns: 1fr; }
+    .quick { display: none; }
+  }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="brand">LOOP<span>TiSCH</span></div>
+    <div class="badge">001 · MPC Workbench</div>
+    <div class="transport">
+      <button class="tbtn" id="btnStop" title="Stop">■</button>
+      <button class="tbtn play" id="btnPlay" aria-pressed="false" title="Play">▶</button>
+      <button class="tbtn" id="btnRec" title="Record pattern taps">●</button>
+    </div>
+    <div class="meter">
+      <div>BPM <b id="bpm">92</b></div>
+      <div>KEY <b id="key">Am</b></div>
+      <div>SWING <b id="swing">58%</b></div>
+      <div>PAT <b>A1</b></div>
+    </div>
+  </header>
+
+  <div class="main">
+    <aside class="panel">
+      <h2>Library · auto-tagged</h2>
+      <div class="lib" id="library"></div>
+    </aside>
+
+    <section class="center">
+      <div class="pads" id="pads"></div>
+      <div class="seq-wrap">
+        <div class="seq-head">
+          <span>Pattern A1 · 16 steps · Pad-Spur: <b id="seqPadLabel" style="color:var(--text)">P1</b></span>
+          <span style="font-family:var(--mono);color:var(--cyan)" id="clock">1.1</span>
+        </div>
+        <div class="steps" id="steps"></div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <h2>Inspector</h2>
+      <div class="inspector">
+        <div class="kv">
+          <div><label>Selected pad</label><strong id="selPad">P1</strong></div>
+          <div><label>Stretch</label><strong id="selStretch">×1.00</strong></div>
+          <div><label>Sample BPM</label><strong id="selBpm">—</strong></div>
+          <div><label>Type</label><strong id="selType">empty</strong></div>
+        </div>
+        <p class="hint">KI schlägt Stretch vor, wenn Sample-BPM ≠ Project. Du bestätigst mit einem Tap — kein Dialog-Wald.</p>
+        <div class="ai-suggest" id="stretchBox" hidden>
+          <h3>Librarian · Stretch</h3>
+          <p id="stretchMsg" style="font-size:12px;margin-bottom:8px;color:var(--muted)"></p>
+          <div class="btn-row">
+            <button class="chip" id="applyStretch">Auf Project-BPM</button>
+            <button class="chip" id="keepRaw">One-shot roh</button>
+          </div>
+        </div>
+        <div class="ai-suggest">
+          <h3>Chopper · Vorschlag</h3>
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Break erkannt · 8 Transienten</p>
+          <div class="btn-row">
+            <button class="chip" data-act="chop8">8 Chops → Pads</button>
+            <button class="chip" data-act="chop16">16 Chops</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="dock">
+    <div class="chat">
+      <div class="msgs" id="msgs">
+        <div class="msg bot"><div class="who">Librarian</div>Library gescannt. 8 Samples getaggt. Sag z.B. „füll dunkle Kicks und einen Break“.</div>
+      </div>
+      <div class="compose">
+        <input id="chatIn" placeholder="Agent-Befehl… (Enter)" autocomplete="off" />
+        <button class="go" id="chatSend">Senden</button>
+      </div>
+    </div>
+    <div class="quick">
+      <h2>Quick agents</h2>
+      <button class="qbtn" data-cmd="füll pads mit dusty kit">Librarian: dusty kit auf Pads</button>
+      <button class="qbtn" data-cmd="clear pads">Pads leeren</button>
+      <button class="qbtn" data-cmd="mach ein simple boom bap pattern">Arranger: Boom-Bap Groove</button>
+      <button class="qbtn" data-cmd="swing 62">Swing 62%</button>
+    </div>
+  </footer>
+  <div class="toast" id="toast">ok</div>
+
+<script>
+const SAMPLES = [
+  { id:'s1', name:'Kick_Dust_A', type:'kick', bpm:92, key:'—', tags:['dusty','mono','punch'] },
+  { id:'s2', name:'Kick_Sub_B', type:'kick', bpm:90, key:'—', tags:['sub','clean'] },
+  { id:'s3', name:'Snare_Room', type:'snare', bpm:92, key:'—', tags:['room','crack'] },
+  { id:'s4', name:'Snare_Rim', type:'snare', bpm:88, key:'—', tags:['rim','tight'] },
+  { id:'s5', name:'HH_Closed', type:'hat', bpm:0, key:'—', tags:['closed','metal'] },
+  { id:'s6', name:'HH_Open', type:'hat', bpm:0, key:'—', tags:['open'] },
+  { id:'s7', name:'Break_AmenLite', type:'loop', bpm:138, key:'—', tags:['break','chop-me'] },
+  { id:'s8', name:'Rhodes_Loop', type:'loop', bpm:86, key:'Am', tags:['warm','keys'] },
+];
+
+const state = {
+  bpm: 92, key: 'Am', swing: 58,
+  pads: Array(16).fill(null),
+  selectedPad: 0,
+  steps: Array(16).fill(null).map(() => Array(16).fill(false)), // pad x step — we'll use selected pad row simplified: one row for selected
+  stepRow: Array(16).fill(false),
+  playing: false, step: 0, timer: null,
+  audio: null,
+};
+
+function ensureAudio() {
+  if (!state.audio) state.audio = new (window.AudioContext || window.webkitAudioContext)();
+  if (state.audio.state === 'suspended') state.audio.resume();
+  return state.audio;
+}
+
+function playTone(padIndex, vel = 0.9) {
+  const sample = state.pads[padIndex];
+  const ctx = ensureAudio();
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator();
+  const g = ctx.createGain();
+  const f = ctx.createBiquadFilter();
+  f.type = 'lowpass';
+  const type = sample?.type || 'kick';
+  if (type === 'kick') {
+    o.type = 'sine'; o.frequency.setValueAtTime(120 + padIndex, t);
+    o.frequency.exponentialRampToValueAtTime(42, t + 0.12);
+    g.gain.setValueAtTime(0.9 * vel, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.28);
+    f.frequency.value = 400;
+  } else if (type === 'snare') {
+    o.type = 'triangle'; o.frequency.value = 180 + padIndex * 3;
+    g.gain.setValueAtTime(0.5 * vel, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.15);
+    f.frequency.value = 2500;
+    // noise burst
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
+    const d = buf.getChannelData(0); for (let i=0;i<d.length;i++) d[i] = Math.random()*2-1;
+    const n = ctx.createBufferSource(); n.buffer = buf;
+    const ng = ctx.createGain(); ng.gain.setValueAtTime(0.35*vel,t); ng.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+    n.connect(ng); ng.connect(ctx.destination); n.start(t);
+  } else if (type === 'hat') {
+    o.type = 'square'; o.frequency.value = 6000 + padIndex * 40;
+    g.gain.setValueAtTime(0.15 * vel, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+    f.frequency.value = 9000;
+  } else {
+    o.type = 'sawtooth'; o.frequency.value = 110 + padIndex * 12;
+    g.gain.setValueAtTime(0.25 * vel, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+    f.frequency.value = 1200;
+  }
+  o.connect(f); f.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + 0.4);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+function renderLibrary() {
+  const root = document.getElementById('library');
+  root.innerHTML = SAMPLES.map(s => `
+    <div class="sample" draggable="true" data-id="${s.id}">
+      <div class="name">${s.name}</div>
+      <span class="tag ${s.type}">${s.type}</span>
+      <div class="meta">${s.bpm ? s.bpm + ' BPM' : 'one-shot'} · ${s.key} · ${s.tags.join(' · ')}</div>
+    </div>`).join('');
+  root.querySelectorAll('.sample').forEach(el => {
+    el.addEventListener('click', () => assignSample(el.dataset.id, state.selectedPad));
+    el.addEventListener('dragstart', e => e.dataTransfer.setData('text/id', el.dataset.id));
+  });
+}
+
+function renderPads() {
+  const root = document.getElementById('pads');
+  root.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const s = state.pads[i];
+    const b = document.createElement('button');
+    b.className = 'pad' + (s ? '' : ' empty') + (state.selectedPad === i ? ' sel' : '');
+    b.style.outline = state.selectedPad === i ? '2px solid var(--cyan)' : '';
+    b.innerHTML = `<span class="n">P${i+1}</span>
+      <span class="lbl">${s ? s.name.replace(/_/g,' ') : 'empty'}</span>
+      <span class="sub">${s ? s.type + (s.bpm ? ' · ' + s.bpm : '') : 'drop / click lib'}</span>`;
+    b.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      state.selectedPad = i;
+      playTone(i);
+      b.classList.add('hit');
+      setTimeout(() => b.classList.remove('hit'), 80);
+      renderPads(); renderInspector(); renderSteps();
+    });
+    b.addEventListener('dragover', e => e.preventDefault());
+    b.addEventListener('drop', e => {
+      e.preventDefault();
+      assignSample(e.dataTransfer.getData('text/id'), i);
+    });
+    root.appendChild(b);
+  }
+}
+
+function assignSample(id, padIndex) {
+  const s = SAMPLES.find(x => x.id === id);
+  if (!s) return;
+  state.pads[padIndex] = { ...s, stretch: s.bpm && s.bpm !== state.bpm ? +(state.bpm / s.bpm).toFixed(3) : 1 };
+  state.selectedPad = padIndex;
+  renderPads(); renderInspector();
+  toast(`P${padIndex+1} ← ${s.name}`);
+  if (s.bpm && s.bpm !== state.bpm) {
+    document.getElementById('stretchBox').hidden = false;
+    document.getElementById('stretchMsg').textContent =
+      `${s.name} ist ${s.bpm} BPM, Project ${state.bpm}. Vorschlag Stretch ×${(state.bpm/s.bpm).toFixed(3)}.`;
+  }
+}
+
+function renderInspector() {
+  const s = state.pads[state.selectedPad];
+  document.getElementById('selPad').textContent = 'P' + (state.selectedPad + 1);
+  document.getElementById('seqPadLabel').textContent = 'P' + (state.selectedPad + 1);
+  document.getElementById('selStretch').textContent = s ? '×' + (s.stretch ?? 1).toFixed(2) : '—';
+  document.getElementById('selBpm').textContent = s?.bpm || '—';
+  document.getElementById('selType').textContent = s?.type || 'empty';
+}
+
+function renderSteps() {
+  const root = document.getElementById('steps');
+  // show step row for selected pad stored in state.steps[selected]
+  if (!state.steps[state.selectedPad]) state.steps[state.selectedPad] = Array(16).fill(false);
+  const row = state.steps[state.selectedPad];
+  root.innerHTML = '';
+  for (let i = 0; i < 16; i++) {
+    const d = document.createElement('button');
+    d.className = 'step' + (row[i] ? ' on' : '') + (i % 4 === 0 ? ' bar' : '') + (state.playing && state.step === i ? ' playhead' : '');
+    d.addEventListener('click', () => {
+      row[i] = !row[i];
+      renderSteps();
+    });
+    root.appendChild(d);
+  }
+}
+
+function addMsg(who, text, user = false) {
+  const root = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + (user ? 'user' : 'bot');
+  d.innerHTML = `<div class="who">${who}</div>${text}`;
+  root.appendChild(d);
+  root.scrollTop = root.scrollHeight;
+}
+
+function fillDustyKit() {
+  const map = [
+    ['s1',0],['s2',1],['s3',2],['s4',3],
+    ['s5',4],['s6',5],['s7',6],['s8',7],
+  ];
+  state.pads = Array(16).fill(null);
+  map.forEach(([id, i]) => assignSample(id, i));
+  addMsg('Librarian', 'Dusty kit auf P1–P8. Break + Rhodes liegen bereit. Stretch-Hinweise im Inspector.');
+}
+
+function clearPads() {
+  state.pads = Array(16).fill(null);
+  state.steps = Array(16).fill(null).map(() => Array(16).fill(false));
+  renderPads(); renderInspector(); renderSteps();
+  addMsg('Librarian', 'Pads und Pattern-Steps geleert.');
+}
+
+function boomBap() {
+  // ensure kit
+  if (!state.pads[0]) fillDustyKit();
+  const kick = state.steps[0] || (state.steps[0] = Array(16).fill(false));
+  const snare = state.steps[2] || (state.steps[2] = Array(16).fill(false));
+  const hat = state.steps[4] || (state.steps[4] = Array(16).fill(false));
+  kick.fill(false); snare.fill(false); hat.fill(false);
+  [0, 7, 10].forEach(i => kick[i] = true);
+  [4, 12].forEach(i => snare[i] = true);
+  for (let i = 0; i < 16; i += 2) hat[i] = true;
+  state.selectedPad = 0;
+  renderSteps(); renderPads();
+  addMsg('Arranger', 'Boom-Bap auf Kick(P1) / Snare(P3) / Hat(P5). Play drücken. Steps der selektierten Pad-Spur editierbar.');
+  toast('Pattern A1 geschrieben');
+}
+
+function handleCmd(raw) {
+  const t = raw.trim().toLowerCase();
+  if (!t) return;
+  addMsg('Du', raw, true);
+  if (t.includes('clear') || t.includes('leer')) return clearPads();
+  if (t.includes('dusty') || t.includes('füll') || t.includes('kit')) return fillDustyKit();
+  if (t.includes('boom') || t.includes('pattern') || t.includes('groove')) return boomBap();
+  if (t.includes('swing')) {
+    const m = t.match(/(\d{2})/);
+    state.swing = m ? +m[1] : 62;
+    document.getElementById('swing').textContent = state.swing + '%';
+    addMsg('Coach', `Swing auf ${state.swing}%. Gerade 16tel bleiben hörbar hinter dem Beat.`);
+    return;
+  }
+  if (t.includes('chop')) {
+    assignSample('s7', 8);
+    for (let i = 9; i < 16; i++) state.pads[i] = { ...SAMPLES[6], name: 'Amen_chop_' + (i-7), type: 'loop', stretch: state.bpm/138 };
+    renderPads();
+    addMsg('Chopper', 'Break in Pads P9–P16 geschnitten (simuliert). Velocity später live.');
+    return;
+  }
+  addMsg('Librarian', 'Verstanden als Skizze. Bekannte Befehle: dusty kit · clear pads · boom bap pattern · swing 62 · chop break.');
+}
+
+function tick() {
+  // play all pads that have step on
+  for (let p = 0; p < 16; p++) {
+    if (state.steps[p] && state.steps[p][state.step] && state.pads[p]) {
+      playTone(p, 0.85);
+      const padEl = document.querySelectorAll('.pad')[p];
+      if (padEl) { padEl.classList.add('hit'); setTimeout(() => padEl.classList.remove('hit'), 60); }
+    }
+  }
+  document.getElementById('clock').textContent = `1.${state.step + 1}`;
+  renderSteps();
+  state.step = (state.step + 1) % 16;
+}
+
+function togglePlay() {
+  ensureAudio();
+  state.playing = !state.playing;
+  document.getElementById('btnPlay').setAttribute('aria-pressed', state.playing);
+  if (state.playing) {
+    const ms = (60 / state.bpm / 4) * 1000;
+    state.step = 0;
+    state.timer = setInterval(tick, ms);
+    tick();
+  } else {
+    clearInterval(state.timer);
+    renderSteps();
+  }
+}
+
+document.getElementById('btnPlay').onclick = togglePlay;
+document.getElementById('btnStop').onclick = () => {
+  state.playing = false; clearInterval(state.timer);
+  state.step = 0;
+  document.getElementById('btnPlay').setAttribute('aria-pressed', 'false');
+  renderSteps();
+};
+document.getElementById('chatSend').onclick = () => {
+  const v = document.getElementById('chatIn').value;
+  document.getElementById('chatIn').value = '';
+  handleCmd(v);
+};
+document.getElementById('chatIn').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('chatSend').click();
+});
+document.querySelectorAll('.qbtn').forEach(b => b.onclick = () => handleCmd(b.dataset.cmd));
+document.getElementById('applyStretch').onclick = () => {
+  const s = state.pads[state.selectedPad];
+  if (s && s.bpm) { s.stretch = +(state.bpm / s.bpm).toFixed(3); renderInspector(); toast('Stretch angewendet'); }
+};
+document.getElementById('keepRaw').onclick = () => {
+  const s = state.pads[state.selectedPad];
+  if (s) { s.stretch = 1; renderInspector(); toast('One-shot roh'); }
+};
+document.querySelectorAll('[data-act]').forEach(b => b.onclick = () => handleCmd('chop break'));
+
+// keyboard 1-0 and q-y for pads lightly
+window.addEventListener('keydown', e => {
+  if (e.target.matches('input')) return;
+  const map = {'1':0,'2':1,'3':2,'4':3,'q':4,'w':5,'e':6,'r':7,'a':8,'s':9,'d':10,'f':11,'z':12,'x':13,'c':14,'v':15};
+  if (e.key === ' ') { e.preventDefault(); togglePlay(); return; }
+  if (map[e.key] != null) {
+    state.selectedPad = map[e.key];
+    playTone(map[e.key]);
+    renderPads(); renderInspector(); renderSteps();
+  }
+});
+
+renderLibrary();
+renderPads();
+renderInspector();
+renderSteps();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+.DS_Store
+*.bak
+flagship/library/packs/
+flagship/library/_index.json
+/tmp/
+__pycache__/
+*.pyc
+.idea/
+.vscode/

@@ -1,0 +1,996 @@
+{
+ "generated_at": "2026-07-21T16:48:55+00:00",
+ "packs": [
+  {
+   "slug": "demo-kit",
+   "name": "LOOPTiSCH Demo Kit (SampleRadar curated)",
+   "count": 58,
+   "license": "MusicRadar SampleRadar royalty-free for music production",
+   "source_url": "https://www.musicradar.com/"
+  }
+ ],
+ "samples": [
+  {
+   "id": "pk_c9ba0e3793",
+   "name": "kick_00_TR_909_Kick_01",
+   "path": "library/packs/demo-kit/kick_00_TR_909_Kick_01.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 90,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11260,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_ac7bb4b0af",
+   "name": "kick_01_DX_Kick_01",
+   "path": "library/packs/demo-kit/kick_01_DX_Kick_01.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11572,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_5ae998347b",
+   "name": "kick_02_80s_Digital_Kick_04",
+   "path": "library/packs/demo-kit/kick_02_80s_Digital_Kick_04.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11924,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_fa3dd2bb46",
+   "name": "kick_03_Chart_Kick_02",
+   "path": "library/packs/demo-kit/kick_03_Chart_Kick_02.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 14368,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_8e8fd1aa3e",
+   "name": "kick_04_Modular_Kick_01",
+   "path": "library/packs/demo-kit/kick_04_Modular_Kick_01.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 14494,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_e63a3b33be",
+   "name": "kick_05_DX_Kick_02",
+   "path": "library/packs/demo-kit/kick_05_DX_Kick_02.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 15568,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_6de0a2e9df",
+   "name": "kick_06_Modular_Kick_04",
+   "path": "library/packs/demo-kit/kick_06_Modular_Kick_04.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 16042,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_cf363f0071",
+   "name": "kick_07_ChipTune_Kick_02",
+   "path": "library/packs/demo-kit/kick_07_ChipTune_Kick_02.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 19768,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_d01254f86b",
+   "name": "kick_08_D_B_Kick_02",
+   "path": "library/packs/demo-kit/kick_08_D_B_Kick_02.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 19834,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_ff925562a9",
+   "name": "kick_09_Modular_Kick_03",
+   "path": "library/packs/demo-kit/kick_09_Modular_Kick_03.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 19928,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_962b00ebe9",
+   "name": "kick_10_Dusty_Kick_01",
+   "path": "library/packs/demo-kit/kick_10_Dusty_Kick_01.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 19958,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_6b083a804a",
+   "name": "kick_11_Techno_Kick_03",
+   "path": "library/packs/demo-kit/kick_11_Techno_Kick_03.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 20912,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_b5f52b877c",
+   "name": "snare_12_Vintage_Rim_02",
+   "path": "library/packs/demo-kit/snare_12_Vintage_Rim_02.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 3208,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_f6e7ea6552",
+   "name": "snare_13_Tr-8_Rim_03",
+   "path": "library/packs/demo-kit/snare_13_Tr-8_Rim_03.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 4390,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_66facbf7ec",
+   "name": "snare_14_Drumbrute_Rim_03",
+   "path": "library/packs/demo-kit/snare_14_Drumbrute_Rim_03.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 5620,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_d9adee933f",
+   "name": "snare_15_Chart_rimshot_01",
+   "path": "library/packs/demo-kit/snare_15_Chart_rimshot_01.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 5890,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_063249bbe4",
+   "name": "snare_16_Drumbrute_Rim_02",
+   "path": "library/packs/demo-kit/snare_16_Drumbrute_Rim_02.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 6826,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_6fa370d329",
+   "name": "snare_17_Tr8_Rim_03",
+   "path": "library/packs/demo-kit/snare_17_Tr8_Rim_03.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 7294,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_6e381496a6",
+   "name": "snare_18_Tr-8_Rim_01",
+   "path": "library/packs/demo-kit/snare_18_Tr-8_Rim_01.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 7558,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_4d0476915f",
+   "name": "snare_19_TR_808_Rimshot",
+   "path": "library/packs/demo-kit/snare_19_TR_808_Rimshot.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 7658,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_54e5c9d938",
+   "name": "snare_20_Drumbrute_Rim_01",
+   "path": "library/packs/demo-kit/snare_20_Drumbrute_Rim_01.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 8854,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_a068ce186f",
+   "name": "snare_21_Vintage_Clap_02",
+   "path": "library/packs/demo-kit/snare_21_Vintage_Clap_02.wav",
+   "pack": "demo-kit",
+   "type": "snare",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "snare",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 8950,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_af02183d41",
+   "name": "hat_22_Vintage_Closed_Hat_03",
+   "path": "library/packs/demo-kit/hat_22_Vintage_Closed_Hat_03.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 3682,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_a60f104bf8",
+   "name": "hat_23_Modular_Closed_Hat_03",
+   "path": "library/packs/demo-kit/hat_23_Modular_Closed_Hat_03.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 4754,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_8bdf9a7f30",
+   "name": "hat_24_ChipTune_Closed_Hat_01",
+   "path": "library/packs/demo-kit/hat_24_ChipTune_Closed_Hat_01.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 6866,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_e8d69c0e03",
+   "name": "hat_25_Foley_Snip_Hat",
+   "path": "library/packs/demo-kit/hat_25_Foley_Snip_Hat.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 6954,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_8573494349",
+   "name": "hat_26_Techno_Closed_Hat_02",
+   "path": "library/packs/demo-kit/hat_26_Techno_Closed_Hat_02.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 8338,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_2561291842",
+   "name": "hat_27_TR_909_Closed_Hat_02",
+   "path": "library/packs/demo-kit/hat_27_TR_909_Closed_Hat_02.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 90,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 8350,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_eef46b724c",
+   "name": "hat_28_Urban_Closed_Hat_02",
+   "path": "library/packs/demo-kit/hat_28_Urban_Closed_Hat_02.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 9688,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_05a2d232a6",
+   "name": "hat_29_Foley_Fizz_Hat_01",
+   "path": "library/packs/demo-kit/hat_29_Foley_Fizz_Hat_01.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10034,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_e1e311e5b0",
+   "name": "hat_30_Foley_Coin_Hat",
+   "path": "library/packs/demo-kit/hat_30_Foley_Coin_Hat.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10382,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_2a35838285",
+   "name": "hat_31_Nord_Hat_04",
+   "path": "library/packs/demo-kit/hat_31_Nord_Hat_04.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11734,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_29b3cd3901",
+   "name": "hat_32_Dusty_Closed_Hat_02",
+   "path": "library/packs/demo-kit/hat_32_Dusty_Closed_Hat_02.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11810,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_684d9816a2",
+   "name": "hat_33_80s_Digital_Closed_Hat_01",
+   "path": "library/packs/demo-kit/hat_33_80s_Digital_Closed_Hat_01.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "hat",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 12142,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_3dc629d39f",
+   "name": "perc_34_Techno_Perc_01",
+   "path": "library/packs/demo-kit/perc_34_Techno_Perc_01.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 3880,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_c73d4e74d0",
+   "name": "perc_35_Techno_Perc_02",
+   "path": "library/packs/demo-kit/perc_35_Techno_Perc_02.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 7796,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_042df72a71",
+   "name": "perc_36_Vintage_Perc_03",
+   "path": "library/packs/demo-kit/perc_36_Vintage_Perc_03.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10220,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_21890cb2bf",
+   "name": "perc_37_Techno_Perc_04",
+   "path": "library/packs/demo-kit/perc_37_Techno_Perc_04.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10598,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_9578bae9cb",
+   "name": "perc_38_ChipTune_Perc_03",
+   "path": "library/packs/demo-kit/perc_38_ChipTune_Perc_03.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11488,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_f147cf5f77",
+   "name": "perc_39_Techno_Tom_03",
+   "path": "library/packs/demo-kit/perc_39_Techno_Tom_03.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11636,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_6bd5c20236",
+   "name": "perc_40_Vintage_Perc_04",
+   "path": "library/packs/demo-kit/perc_40_Vintage_Perc_04.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 11972,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_bfb9b63382",
+   "name": "perc_41_80s_Digital_Shaker",
+   "path": "library/packs/demo-kit/perc_41_80s_Digital_Shaker.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "perc",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 12020,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_8eab4be052",
+   "name": "loop_42_Modular_Triangle",
+   "path": "library/packs/demo-kit/loop_42_Modular_Triangle.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 4412,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_56dfd063f6",
+   "name": "loop_43_Drumbrute_Clave",
+   "path": "library/packs/demo-kit/loop_43_Drumbrute_Clave.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 5278,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_b0e8111207",
+   "name": "loop_44_TR_808_Clave",
+   "path": "library/packs/demo-kit/loop_44_TR_808_Clave.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 6886,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_96c2db2621",
+   "name": "loop_45_Hand_Bongo_03",
+   "path": "library/packs/demo-kit/loop_45_Hand_Bongo_03.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 8470,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_b3c9302ba5",
+   "name": "loop_46_Hand_Hide_Drum_02",
+   "path": "library/packs/demo-kit/loop_46_Hand_Hide_Drum_02.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10246,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_8a139b2c18",
+   "name": "loop_47_DX_Tamb_02",
+   "path": "library/packs/demo-kit/loop_47_DX_Tamb_02.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "loop",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 10258,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_5761dffd62",
+   "name": "melodic_48_E808_Loop_SD_105-08",
+   "path": "library/packs/demo-kit/melodic_48_E808_Loop_SD_105-08.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 604890,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_7d54b39ad4",
+   "name": "melodic_49_E808_Loop_SD_95-05",
+   "path": "library/packs/demo-kit/melodic_49_E808_Loop_SD_95-05.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 668556,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_92e1f0e261",
+   "name": "melodic_50_E808_Loop_SD_95-04",
+   "path": "library/packs/demo-kit/melodic_50_E808_Loop_SD_95-04.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 668556,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_3e5a88f0d3",
+   "name": "melodic_51_E808_Loop_SD_95-06",
+   "path": "library/packs/demo-kit/melodic_51_E808_Loop_SD_95-06.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 668556,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_00547930a5",
+   "name": "melodic_52_E808_Loop_SD_95-07",
+   "path": "library/packs/demo-kit/melodic_52_E808_Loop_SD_95-07.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 668556,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_019e4af21d",
+   "name": "melodic_53_E808_Loop_SD_95-03",
+   "path": "library/packs/demo-kit/melodic_53_E808_Loop_SD_95-03.wav",
+   "pack": "demo-kit",
+   "type": "melodic",
+   "bpm": 80,
+   "tags": [
+    "real",
+    "demo",
+    "melodic",
+    "pack:demo-kit"
+   ],
+   "duration": null,
+   "size": 668556,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_1c736072cf",
+   "name": "local_break_94bpm",
+   "path": "library/packs/demo-kit/local_break_94bpm.wav",
+   "pack": "demo-kit",
+   "type": "loop",
+   "bpm": 94,
+   "tags": [
+    "real",
+    "demo",
+    "loop"
+   ],
+   "duration": null,
+   "size": 450426,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_63e9acf22f",
+   "name": "local_hat_test",
+   "path": "library/packs/demo-kit/local_hat_test.wav",
+   "pack": "demo-kit",
+   "type": "hat",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "hat"
+   ],
+   "duration": null,
+   "size": 7134,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_dfea36f308",
+   "name": "local_hit",
+   "path": "library/packs/demo-kit/local_hit.wav",
+   "pack": "demo-kit",
+   "type": "perc",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "perc"
+   ],
+   "duration": null,
+   "size": 7134,
+   "ext": "wav"
+  },
+  {
+   "id": "pk_071f93ba4f",
+   "name": "local_kick_test",
+   "path": "library/packs/demo-kit/local_kick_test.wav",
+   "pack": "demo-kit",
+   "type": "kick",
+   "bpm": 0,
+   "tags": [
+    "real",
+    "demo",
+    "kick"
+   ],
+   "duration": null,
+   "size": 30948,
+   "ext": "wav"
+  }
+ ]
+}
