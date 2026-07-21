@@ -1030,4 +1030,152 @@
     project, engine, transport, agents, history, runner,
     renderAll, runAgent, startMission, importFiles, loadPackIndex, Analyze, Coop,
   };
+
+  // ——— FX LAB: rack, flex, master ———
+  (function initLab() {
+    const rack = () => engine.rack;
+    const suite = () => engine.masterSuite;
+
+    // FX chips
+    const rackEl = $('#fxRack');
+    if (rackEl && rack()) {
+      rackEl.innerHTML = rack().slots.map((s) => `
+        <div class="fx-chip" data-fx="${s.id}">
+          <button type="button" class="fx-name">${s.name}</button>
+          <input type="range" min="0" max="100" value="${Math.round(s.amount * 100)}" />
+        </div>`).join('');
+      rackEl.querySelectorAll('.fx-chip').forEach((chip) => {
+        const id = chip.dataset.fx;
+        chip.querySelector('.fx-name').onclick = () => {
+          const on = !chip.classList.contains('on');
+          chip.classList.toggle('on', on);
+          rack().setEnabled(id, on);
+        };
+        chip.querySelector('input').oninput = (e) => rack().setAmount(id, e.target.value / 100);
+      });
+    }
+
+    // FLEX: offline DSP on selected pad buffer
+    const prog = $('#flexProg');
+    const progBar = prog?.querySelector('i');
+    const setProg = (v) => { if (!prog) return; prog.hidden = v >= 1; progBar.style.width = Math.round(v * 100) + '%'; };
+    const padBuf = () => {
+      const s = project.pads[project.selectedPad];
+      const buf = s && s.bufferId ? engine.getBuffer(s.bufferId) : null;
+      return { s, buf };
+    };
+    const updateFlexTarget = () => {
+      const { s, buf } = padBuf();
+      $('#flexTarget').textContent = s
+        ? `Pad ${project.selectedPad + 1} · ${s.name}${buf ? '' : ' · (lädt beim ersten Hit)'}`
+        : 'kein Pad gewählt — Pad anklicken';
+    };
+    project.on(() => updateFlexTarget());
+    updateFlexTarget();
+
+    async function applyFlex(fn, label) {
+      const { s, buf } = padBuf();
+      if (!s || !buf) { toast('FLEX: Pad mit Sample wählen'); return; }
+      engine.ensure();
+      setProg(0.01);
+      try {
+        const chans = LT_DSP.toChannels(buf);
+        const out = await fn(chans, buf.sampleRate);
+        const nb = LT_DSP.fromChannels(engine.ctx, out, buf.sampleRate);
+        engine.storeBuffer(s.bufferId, nb);
+        addMsg('Flex', `${label}: ${s.name} · ${nb.duration.toFixed(2)}s`);
+        toast('FLEX ✓ ' + label);
+      } catch (err) {
+        addMsg('Flex', 'Fail: ' + (err.message || err));
+      }
+      setProg(1);
+      renderInspector();
+    }
+
+    document.querySelectorAll('[data-flex]').forEach((b) => {
+      b.onclick = () => {
+        const kind = b.dataset.flex;
+        if (kind === 'reverse') applyFlex((c) => LT_DSP.reverse(c), 'REVERSE');
+        if (kind === 'trim') applyFlex((c, sr) => LT_DSP.trimSilence(c, sr), 'TRIM');
+        if (kind === 'norm') applyFlex((c) => LT_DSP.normalize(c), 'NORMALIZE');
+      };
+    });
+    document.querySelectorAll('[data-stretch]').forEach((b) => {
+      b.onclick = () => {
+        const r = +b.dataset.stretch;
+        applyFlex(async (c, sr) => {
+          const out = await LT_DSP.wsola(c, sr, r, setProg);
+          const { s } = padBuf();
+          if (s && s.bpm) { s.bpm = +(s.bpm / r).toFixed(1); s.stretch = +(project.bpm / s.bpm).toFixed(3); }
+          return out;
+        }, 'TIME ×' + r);
+      };
+    });
+    $('#btnFlexBpm').onclick = () => {
+      const { s } = padBuf();
+      if (!s || !s.bpm) { toast('Sample hat kein BPM'); return; }
+      const r = +(project.bpm / s.bpm).toFixed(3);
+      applyFlex(async (c, sr) => {
+        const out = await LT_DSP.wsola(c, sr, r, setProg);
+        s.bpm = project.bpm; s.stretch = 1;
+        return out;
+      }, `BPM ${s.bpm}→${project.bpm}`);
+    };
+    $('#flexPitch').oninput = (e) => { $('#flexPitchVal').textContent = e.target.value + ' st'; };
+    $('#btnFlexPitch').onclick = () => {
+      const st = +$('#flexPitch').value;
+      if (!st) { toast('0 st — nichts zu tun'); return; }
+      applyFlex((c, sr) => LT_DSP.pitchShift(c, sr, st, setProg), `PITCH ${st > 0 ? '+' : ''}${st}st`);
+    };
+    $('#flexTune').oninput = (e) => { $('#flexTuneVal').textContent = +e.target.value >= 95 ? 'hard' : e.target.value + '%'; };
+    $('#btnFlexTune').onclick = () => {
+      const strength = +$('#flexTune').value / 100;
+      applyFlex((c, sr) => LT_DSP.tuneToScale(c, sr, project.key, strength, setProg), `TUNE→${project.key}`);
+    };
+
+    // MASTER
+    const lufsEl = $('#lufsVal');
+    if (suite()) {
+      suite().onMeter = (lufs) => {
+        if (project.mode === 'lab' && lufsEl) lufsEl.textContent = lufs <= -65 ? '—' : lufs.toFixed(1);
+      };
+    }
+    $('#masterTarget').onchange = (e) => suite() && suite().setTarget(+e.target.value);
+    $('#btnAutoMaster').onclick = (e) => {
+      if (!suite()) return;
+      const on = !suite().enabled;
+      suite().setEnabled(on, engine);
+      e.target.textContent = 'AUTO MASTER: ' + (on ? 'AN' : 'AUS');
+      e.target.classList.toggle('on', on);
+      toast(on ? `AUTO MASTER → ${suite().target} LUFS` : 'AUTO MASTER aus');
+    };
+    $('#btnAutoMix').onclick = () => {
+      const res = LT_MASTER.autoMix(project, engine, (m) => logTool({ name: 'auto_mix', ok: true, result: m }));
+      toast(`AUTO MIX ✓ ${res.length} Pads gestaged`);
+      addMsg('Mixer', `Auto-Mix: ${res.length} Pads gain-gestaged (RMS-Rollen)`);
+      renderMixer();
+    };
+
+    // Spectrum im Header
+    const spec = $('#spec');
+    if (spec && engine.analyser) {
+      const sctx = spec.getContext('2d');
+      const bins = new Uint8Array(engine.analyser.frequencyBinCount);
+      const draw = () => {
+        requestAnimationFrame(draw);
+        engine.analyser.getByteFrequencyData(bins);
+        const W = spec.width, H = spec.height, n = 42;
+        sctx.clearRect(0, 0, W, H);
+        const bw = W / n;
+        for (let i = 0; i < n; i++) {
+          const v = bins[Math.floor(Math.pow(i / n, 1.6) * bins.length)] / 255;
+          const h = Math.max(1, v * H);
+          const hue = 330 - v * 60;
+          sctx.fillStyle = `hsla(${hue}, 90%, ${45 + v * 25}%, ${0.35 + v * 0.65})`;
+          sctx.fillRect(i * bw + 0.5, H - h, bw - 1.5, h);
+        }
+      };
+      draw();
+    }
+  })();
 })();

@@ -96,8 +96,16 @@
         this.analyser.fftSize = 512;
         this.analyser.smoothingTimeConstant = 0.65;
 
-        // input -> drive -> comp -> limiter -> master -> analyser -> out
-        this.input.connect(this.drive);
+        // input -> [fx rack] -> [master suite] -> drive -> comp -> limiter -> master -> analyser -> out
+        if (window.LT_FX && window.LT_MASTER) {
+          this.rack = window.LT_FX.createRack(this.ctx);
+          this.masterSuite = window.LT_MASTER.create(this.ctx);
+          this.input.connect(this.rack.input);
+          this.rack.output.connect(this.masterSuite.input);
+          this.masterSuite.output.connect(this.drive);
+        } else {
+          this.input.connect(this.drive);
+        }
         this.drive.connect(this.comp);
         this.comp.connect(this.limiter);
         this.limiter.connect(this.master);

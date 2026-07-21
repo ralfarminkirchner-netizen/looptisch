@@ -82,7 +82,9 @@
           <button type="button" class="on" data-mode="perform" role="tab" aria-selected="true">PADS</button>
           <button type="button" data-mode="arrange" role="tab" aria-selected="false">ARRANGE</button>
           <button type="button" data-mode="chop" role="tab" aria-selected="false">CHOP</button>
+          <button type="button" data-mode="lab" role="tab" aria-selected="false">FX·LAB</button>
         </div>
+        <canvas id="spec" class="spec" width="200" height="34" aria-hidden="true"></canvas>
       </div>
     </header>
 
@@ -192,6 +194,77 @@
           <div class="arrange" id="arrange"></div>
         </section>
 
+        <section class="view" id="viewLab" data-view="lab" hidden>
+          <div class="deck-head">
+            <div>
+              <h2>FX Lab</h2>
+              <p class="deck-sub">Master-Insert · klicken = an/aus · Slider = Intensität</p>
+            </div>
+          </div>
+          <div class="fx-rack" id="fxRack"></div>
+
+          <div class="deck-head">
+            <div>
+              <h2>Flex · Time &amp; Pitch</h2>
+              <p class="deck-sub" id="flexTarget">kein Pad gewählt</p>
+            </div>
+            <div class="deck-actions">
+              <button type="button" class="mini" data-flex="reverse">REV</button>
+              <button type="button" class="mini" data-flex="trim">TRIM</button>
+              <button type="button" class="mini" data-flex="norm">NORM</button>
+            </div>
+          </div>
+          <div class="flex-panel">
+            <div class="flex-row">
+              <span class="flex-lab">TIME</span>
+              <button type="button" class="mini" data-stretch="0.5">×0.5</button>
+              <button type="button" class="mini" data-stretch="0.75">×0.75</button>
+              <button type="button" class="mini" data-stretch="1.25">×1.25</button>
+              <button type="button" class="mini" data-stretch="1.5">×1.5</button>
+              <button type="button" class="mini" data-stretch="2">×2</button>
+              <button type="button" class="mini accent" id="btnFlexBpm">BPM ▶ PROJ</button>
+            </div>
+            <div class="flex-row">
+              <span class="flex-lab">PITCH</span>
+              <input id="flexPitch" type="range" min="-12" max="12" step="1" value="0" />
+              <b id="flexPitchVal">0 st</b>
+              <button type="button" class="mini accent" id="btnFlexPitch">PITCH IT</button>
+            </div>
+            <div class="flex-row">
+              <span class="flex-lab">TUNE</span>
+              <input id="flexTune" type="range" min="0" max="100" value="100" />
+              <b id="flexTuneVal">hard</b>
+              <button type="button" class="mini accent" id="btnFlexTune">TUNE ▶ KEY</button>
+            </div>
+            <div class="flex-progress" id="flexProg" hidden><i></i></div>
+          </div>
+
+          <div class="deck-head">
+            <div>
+              <h2>Mix &amp; Master</h2>
+              <p class="deck-sub">loudness · multiband · gain staging</p>
+            </div>
+          </div>
+          <div class="master-panel">
+            <div class="lufs-box">
+              <div class="lufs-val" id="lufsVal">—</div>
+              <div class="lufs-lab">LUFS</div>
+            </div>
+            <div class="master-ctrl">
+              <label class="flex-row">
+                <span class="flex-lab">ZIEL</span>
+                <select id="masterTarget">
+                  <option value="-14" selected>-14 STREAM</option>
+                  <option value="-9">-9 CLUB</option>
+                  <option value="-7">-7 LOUD</option>
+                </select>
+              </label>
+              <button type="button" class="mini accent big" id="btnAutoMaster">AUTO MASTER: AUS</button>
+              <button type="button" class="mini accent big" id="btnAutoMix">AUTO MIX ▶ PADS</button>
+            </div>
+          </div>
+        </section>
+
         <section class="view" id="viewChop" data-view="chop" hidden>
           <div class="deck-head">
             <div>
@@ -269,6 +342,9 @@
 
   <div class="toast" id="toast" role="status"></div>
   <script src="analyze.js"></script>
+  <script src="dsp.js"></script>
+  <script src="fx.js"></script>
+  <script src="master.js"></script>
   <script src="engine.js"></script>
   <script src="coop.js"></script>
   <script src="app.js"></script>
