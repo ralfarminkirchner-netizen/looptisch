@@ -18,7 +18,10 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
-PORT = int(os.environ.get("LOOPTISCH_PORT", "8777"))
+PORT = int(os.environ.get("PORT") or os.environ.get("LOOPTISCH_PORT", "8777"))
+HOST = os.environ.get("LOOPTISCH_HOST", "127.0.0.1")
+if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("PORT"):
+    HOST = "0.0.0.0"
 OLLAMA = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
 # Fast default; override with LOOPTISCH_MODEL=qwen3-coder:30b etc.
 MODEL = os.environ.get("LOOPTISCH_MODEL", "llama3.1:latest")
@@ -302,6 +305,8 @@ class Handler(SimpleHTTPRequestHandler):
         if ess_path in ("/api/essence/cell", "/api/essence/delta"):
             import subprocess, tempfile
             VENV_PY = str(Path.home() / ".hermes/hermes-agent/venv/bin/python")
+            if not Path(VENV_PY).exists():
+                VENV_PY = sys.executable  # Railway: deps im selben Env
             BRIDGE = str(ROOT.parent / "tools" / "essence_bridge.py")
             tmp_paths = []
             try:
@@ -334,6 +339,12 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path.split("?")[0] == "/api/master":
             import subprocess, tempfile, base64
             MG_PY = str(ROOT.parent / ".venv-mg" / "bin" / "python")
+            if not Path(MG_PY).exists():
+                try:
+                    import matchering  # noqa: F401
+                    MG_PY = sys.executable  # Railway: matchering im selben Env
+                except ImportError:
+                    pass
             BRIDGE = str(ROOT.parent / "tools" / "mastering_bridge.py")
             tmp_paths = []
             try:
@@ -488,7 +499,7 @@ class Handler(SimpleHTTPRequestHandler):
 
 def main():
     os.chdir(ROOT)
-    httpd = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+    httpd = ThreadingHTTPServer((HOST, PORT), Handler)
     print(f"LOOPTiSCH → http://127.0.0.1:{PORT}/")
     print(f"  model={MODEL}  ollama={OLLAMA}")
     print(f"  health → http://127.0.0.1:{PORT}/api/health")

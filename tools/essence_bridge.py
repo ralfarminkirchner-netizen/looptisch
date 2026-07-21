@@ -14,8 +14,14 @@ import json
 import sys
 from pathlib import Path
 
+_HERE = Path(__file__).resolve().parent
 SOS = Path.home() / "Projects" / "signature-of-style"
-sys.path.insert(0, str(SOS))
+for _p in (SOS, _HERE / "vendor", _HERE.parent / "vendor"):
+    if (_p / "signature_engine").exists() or (_p / "__init__.py" and _p.name == "signature_engine"):
+        sys.path.insert(0, str(_p))
+        break
+else:
+    sys.path.insert(0, str(SOS))  # honest ImportError below if missing
 
 from signature_engine import audio_to_cell  # noqa: E402
 from signature_engine.interfere import interfere_set  # noqa: E402
