@@ -73,17 +73,18 @@
   const chains = {
     /** Forge original track → import → chop → pads 9–16 → automix */
     forge_to_pads: (preset) => runChain(`FORGE→PADS (${preset})`, [
-      ['Forge rendert Original-Track', async () => {
+      ['Forge rendert Original-Track (echte Samples)', async () => {
         const style = { ...(LT_FORGE.PRESETS[preset] || {}), seed: (Math.random() * 1e9) | 0 };
-        const { buffer, meta } = await LT_FORGE.forge(style);
+        const { buffer, meta } = await LT_FORGE.forgeSmart(style, { project: LT.project, engine: LT.engine });
         state.lastForge = { buffer, meta };
+        if (meta.kit) LT.addMsg('Forge', 'Kit: ' + Object.entries(meta.kit).map(([r, n]) => `${r}=${String(n).slice(0, 18)}`).join(' · '));
         return { buffer, meta, preset };
       }],
       ['Analysieren + in Library', async ({ buffer, meta, preset: p }) => {
         const m = importBuffer(buffer, `forge-${p}-${meta.seed.toString(36)}`, {
           license: meta.license, essence: { origin: 'forge', seed: meta.seed },
         });
-        LT.addMsg('Forge', `${m.name} · ${m.bpm || '?'} bpm · ${m.onsets} onsets · seed ${meta.seed} · lizenzfrei (prozedural)`);
+        LT.addMsg('Forge', `${m.name} · ${m.bpm || '?'} bpm · ${m.onsets} onsets · seed ${meta.seed} · ${meta.license || 'lizenzfrei'}`);
         return m;
       }],
       ['Chops erkennen', async (m) => {
@@ -109,7 +110,7 @@
         return sig;
       }],
       ['Forge im gemessenen Stil', async (sig) => {
-        const { buffer, meta } = await LT_FORGE.forge(styleFromEssence(sig));
+        const { buffer, meta } = await LT_FORGE.forgeSmart(styleFromEssence(sig), { project: LT.project, engine: LT.engine });
         state.lastForge = { buffer, meta };
         return { sig, buffer, meta };
       }],

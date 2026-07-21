@@ -316,6 +316,49 @@
     }
   }
 
+  const TYPE_COLORS = {
+    kick: '#ff4d7e', snare: '#ffb84d', hat: '#4dd2ff', perc: '#9dff4d',
+    melodic: '#c44dff', loop: '#4dffc3',
+  };
+  function drawPadWave(canvas, s) {
+    const c2 = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const color = TYPE_COLORS[s.type] || '#ff4d7e';
+    c2.clearRect(0, 0, W, H);
+    let peaks = s.waveform;
+    if (!peaks) {
+      const buf = s.bufferId ? engine.getBuffer(s.bufferId) : null;
+      if (buf) {
+        try { peaks = Analyze.waveformPeaks(Analyze.monoFromBuffer(buf), 180); s.waveform = peaks; } catch { /* noop */ }
+      } else if (s.url) {
+        // async: decode then redraw pads once
+        engine.loadUrl(s.bufferId || s.id, s.url).then(() => renderPads()).catch(() => {});
+      }
+    }
+    if (!peaks) {
+      // placeholder: type-colored pulse line
+      c2.strokeStyle = color + '55';
+      c2.beginPath(); c2.moveTo(0, H / 2); c2.lineTo(W, H / 2); c2.stroke();
+      return;
+    }
+    const n = peaks.length;
+    const bw = W / n;
+    const grad = c2.createLinearGradient(0, 0, W, 0);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, color + '99');
+    c2.fillStyle = grad;
+    const a0 = s.chopStart != null ? s.chopStart : 0;
+    const a1 = s.chopEnd != null ? s.chopEnd : 1;
+    for (let i = 0; i < n; i++) {
+      const v = Math.min(1, peaks[i]);
+      const h = Math.max(1.5, v * (H - 6));
+      const x = i * bw;
+      c2.globalAlpha = (i / n >= a0 && i / n <= a1) ? 0.95 : 0.18;
+      c2.fillRect(x, (H - h) / 2, Math.max(0.7, bw - 0.3), h);
+    }
+    c2.globalAlpha = 1;
+  }
+
   function renderPads() {
     const root = $('#pads');
     root.innerHTML = '';
@@ -335,8 +378,10 @@
       b.innerHTML = `
         <span class="idx">P${i + 1}</span>
         <span class="flags">${flags.join('')}</span>
+        <canvas class="pad-wave" width="180" height="54" aria-hidden="true"></canvas>
         <span class="lbl">${s ? escapeHtml(s.name.replace(/_/g, ' ')) : 'empty'}</span>
         <span class="sub">${s ? `${s.type} · ×${(s.stretch || 1).toFixed(2)}` : 'drop sample'}</span>`;
+      if (s) drawPadWave(b.querySelector('.pad-wave'), s);
       b.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         project.selectedPad = i;
@@ -1020,6 +1065,11 @@
       addMsg('Librarian', `${res.packs} Packs · ${res.added} echte Samples indexiert. Mission „Pack → Kit“ probieren.`);
     }
     renderAll();
+    // Boot-Erlebnis: nie leer starten — echtes Kit sofort spielbar
+    if (project.pads.every((p) => !p) && window.LT_COPILOT_API) {
+      addMsg('Co-Pilot', 'Start-Kit: Forge rendert mit echten Samples — gleich spielbar.');
+      window.LT_COPILOT_API.chains.forge_to_pads('dusty-boombap');
+    }
   });
   updateUndoBtns();
   renderMeters();
@@ -1045,7 +1095,7 @@
     $('#btnForgeOnly') && ($('#btnForgeOnly').onclick = async () => {
       status('rendere…');
       try {
-        const { buffer, meta } = await LT_FORGE.forge({ ...LT_FORGE.PRESETS[preset()], seed: (Math.random() * 1e9) | 0 });
+        const { buffer, meta } = await LT_FORGE.forgeSmart({ ...LT_FORGE.PRESETS[preset()], seed: (Math.random() * 1e9) | 0 }, { project, engine });
         const analysis = Analyze.analyzeAudioBuffer(buffer, { name: 'forge' });
         const bufferId = project.nextId('buf');
         engine.storeBuffer(bufferId, buffer);
