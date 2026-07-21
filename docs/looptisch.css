@@ -1372,6 +1372,7 @@ button.cell:hover { background: oklch(0.16 0.02 280); }
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+.drop-overlay[hidden] { display: none !important; }
 .drop-overlay {
   position: fixed;
   inset: 0;

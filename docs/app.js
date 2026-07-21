@@ -903,20 +903,30 @@
   $('#fileIn').onchange = (e) => { importFiles(e.target.files); e.target.value = ''; };
 
   const overlay = $('#dropOverlay');
-  let dragDepth = 0;
+  const isFileDrag = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+  let dragHideTimer = null;
+  const showOverlay = () => { overlay.hidden = false; };
+  const hideOverlay = () => { clearTimeout(dragHideTimer); overlay.hidden = true; };
   window.addEventListener('dragenter', (e) => {
-    if (![...e.dataTransfer.types].includes('Files')) return;
-    dragDepth++; overlay.hidden = false;
-  });
-  window.addEventListener('dragleave', () => {
-    dragDepth = Math.max(0, dragDepth - 1);
-    if (!dragDepth) overlay.hidden = true;
+    if (!isFileDrag(e)) return;
+    showOverlay();
   });
   window.addEventListener('dragover', (e) => {
-    if ([...e.dataTransfer.types].includes('Files')) { e.preventDefault(); overlay.hidden = false; }
+    if (!isFileDrag(e)) return;
+    e.preventDefault();
+    showOverlay();
+    // auto-hide: wenn der Drag das Fenster verlässt oder abbricht,
+    // feuert kein dragover mehr → Overlay schließt sich selbst
+    clearTimeout(dragHideTimer);
+    dragHideTimer = setTimeout(hideOverlay, 200);
   });
+  document.addEventListener('dragleave', (e) => {
+    if (e.relatedTarget === null) hideOverlay(); // Drag verlässt Fenster
+  });
+  window.addEventListener('dragend', hideOverlay);
+  overlay.addEventListener('click', hideOverlay); // wegklickbar
   window.addEventListener('drop', (e) => {
-    dragDepth = 0; overlay.hidden = true;
+    hideOverlay();
     if (!e.dataTransfer?.files?.length) return;
     e.preventDefault();
     const padEl = e.target.closest?.('.pad');
@@ -946,6 +956,7 @@
       return;
     }
     if (ev.key === 'Escape') {
+      hideOverlay();
       transport.stop(); playheadStep = 0; playheadBar = 0;
       renderTransport(); renderSeq();
       return;
