@@ -297,6 +297,39 @@ class Handler(SimpleHTTPRequestHandler):
                 })
             except Exception as e:
                 return self._json(500, {"ok": False, "error": str(e)})
+        # ——— Essence Engine bridge (local only) ———
+        ess_path = self.path.split("?")[0]
+        if ess_path in ("/api/essence/cell", "/api/essence/delta"):
+            import subprocess, tempfile
+            VENV_PY = str(Path.home() / ".hermes/hermes-agent/venv/bin/python")
+            BRIDGE = str(ROOT.parent / "tools" / "essence_bridge.py")
+            tmp_paths = []
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+                body = self.rfile.read(length)
+                if ess_path == "/api/essence/cell":
+                    title = self.headers.get("X-Title", "clip")
+                    with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                        f.write(body); tmp_paths.append(f.name)
+                    cmd = [VENV_PY, BRIDGE, "cell", tmp_paths[0], title]
+                else:
+                    payload = json.loads(body.decode("utf-8") or "{}")
+                    import base64
+                    for key in ("wav_a", "wav_b"):
+                        raw = base64.b64decode(payload.get(key) or "")
+                        with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as f:
+                            f.write(raw); tmp_paths.append(f.name)
+                    cmd = [VENV_PY, BRIDGE, "delta", tmp_paths[0], tmp_paths[1]]
+                proc = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+                out = json.loads(proc.stdout or "{}")
+                out["engine"] = "signature-of-style"
+                return self._json(200 if out.get("ok") else 500, out)
+            except Exception as e:
+                return self._json(500, {"ok": False, "error": f"{type(e).__name__}: {e}"})
+            finally:
+                for p in tmp_paths:
+                    try: Path(p).unlink()
+                    except OSError: pass
         if self.path.split("?")[0] != "/api/chat":
             self.send_error(404)
             return

@@ -197,6 +197,32 @@
         <section class="view" id="viewLab" data-view="lab" hidden>
           <div class="deck-head">
             <div>
+              <h2>Style Forge</h2>
+              <p class="deck-sub">lizenzfreie Original-Tracks · prozedural · seed-owned · direkt samplen</p>
+            </div>
+            <div class="deck-actions">
+              <select id="forgePreset" class="forge-sel">
+                <option value="dusty-boombap">DUSTY BOOMBAP</option>
+                <option value="deep-house">DEEP HOUSE</option>
+                <option value="club-drive">CLUB DRIVE</option>
+                <option value="lofi-drift">LOFI DRIFT</option>
+                <option value="break-fuel">BREAK FUEL</option>
+              </select>
+              <button type="button" class="mini accent" id="btnForge">FORGE ▶ PADS</button>
+              <button type="button" class="mini" id="btnForgeOnly">NUR RENDERN</button>
+            </div>
+          </div>
+          <div class="forge-panel">
+            <div class="forge-status" id="forgeStatus">kein Render — Preset wählen, FORGE drücken. Output: 16 Bars, lizenzfrei, wird auto-analysiert + gechopt.</div>
+            <div class="forge-row">
+              <button type="button" class="mini" id="btnStyleClone">STYLE-KLON (Pad→Essence→Forge→Δ)</button>
+              <button type="button" class="mini" id="btnEssencePad">ESSENCE vom Pad</button>
+              <span class="forge-delta" id="forgeDelta"></span>
+            </div>
+          </div>
+
+          <div class="deck-head">
+            <div>
               <h2>FX Lab</h2>
               <p class="deck-sub">Master-Insert · klicken = an/aus · Slider = Intensität</p>
             </div>
@@ -345,6 +371,9 @@
   <script src="dsp.js"></script>
   <script src="fx.js"></script>
   <script src="master.js"></script>
+  <script src="essence.js"></script>
+  <script src="forge.js"></script>
+  <script src="copilot.js"></script>
   <script src="engine.js"></script>
   <script src="coop.js"></script>
   <script src="app.js"></script>

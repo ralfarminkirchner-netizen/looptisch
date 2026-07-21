@@ -1594,3 +1594,60 @@ button.cell:hover { background: oklch(0.16 0.02 280); }
   border: 1px solid oklch(1 0 0 / 0.1);
   box-shadow: 0 12px 40px oklch(0 0 0 / 0.5);
 }
+
+/* ================= STYLE FORGE + CO-PILOT ================= */
+.forge-panel {
+  background: linear-gradient(135deg, oklch(0.19 0.03 350 / 0.65), var(--glass));
+  border: 1px solid oklch(0.68 0.22 355 / 0.25);
+  border-radius: 14px;
+  padding: 14px 16px;
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.forge-status { font-family: var(--mono); font-size: 11px; color: var(--muted); line-height: 1.5; }
+.forge-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.forge-delta { font-family: var(--mono); font-size: 11px; color: var(--acc-2); }
+.forge-sel {
+  background: var(--chassis-2); color: inherit;
+  border: 1px solid oklch(1 0 0 / 0.12);
+  border-radius: 8px; padding: 6px 10px;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em;
+}
+
+.copilot {
+  background: linear-gradient(135deg, oklch(0.17 0.04 195 / 0.55), var(--glass));
+  border: 1px solid oklch(0.75 0.17 195 / 0.3);
+  border-radius: 12px;
+  padding: 10px;
+  margin-bottom: 12px;
+  display: grid;
+  gap: 6px;
+}
+.cop-h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em;
+  color: var(--acc-2);
+}
+.cop-h span { color: var(--muted); font-size: 9px; }
+.cop-chip {
+  display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  background: oklch(0.22 0.02 280 / 0.85);
+  border: 1px solid oklch(1 0 0 / 0.09);
+  border-radius: 9px;
+  padding: 8px 11px;
+  cursor: pointer;
+  color: inherit;
+  font-family: var(--mono); font-size: 11px;
+  transition: transform 130ms cubic-bezier(.2,.9,.3,1.4), border-color 160ms, box-shadow 160ms;
+  animation: copIn 260ms ease-out;
+}
+.cop-chip:hover:not(:disabled) {
+  transform: translateX(3px);
+  border-color: var(--acc-2);
+  box-shadow: -3px 0 0 var(--acc-2), 0 4px 18px oklch(0.75 0.17 195 / 0.2);
+}
+.cop-chip:disabled { opacity: 0.5; cursor: default; }
+.cop-chip b { letter-spacing: 0.05em; }
+.cop-chip span { color: var(--muted); font-size: 9px; }
+@keyframes copIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }

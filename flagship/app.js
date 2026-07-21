@@ -1029,7 +1029,68 @@
   window.LT = {
     project, engine, transport, agents, history, runner,
     renderAll, runAgent, startMission, importFiles, loadPackIndex, Analyze, Coop,
+    toast, addMsg, setMode, renderMixer, renderPads, renderInspector,
   };
+
+  // ——— STYLE FORGE wiring ———
+  (function initForge() {
+    if (!window.LT_FORGE) return;
+    const preset = () => $('#forgePreset')?.value || 'dusty-boombap';
+    const status = (t) => { const el = $('#forgeStatus'); if (el) el.textContent = t; };
+    const deltaEl = () => $('#forgeDelta');
+
+    $('#btnForge') && ($('#btnForge').onclick = () => {
+      window.LT_COPILOT_API?.chains.forge_to_pads(preset());
+    });
+    $('#btnForgeOnly') && ($('#btnForgeOnly').onclick = async () => {
+      status('rendere…');
+      try {
+        const { buffer, meta } = await LT_FORGE.forge({ ...LT_FORGE.PRESETS[preset()], seed: (Math.random() * 1e9) | 0 });
+        const analysis = Analyze.analyzeAudioBuffer(buffer, { name: 'forge' });
+        const bufferId = project.nextId('buf');
+        engine.storeBuffer(bufferId, buffer);
+        const m = project.import_sample({ name: `forge-${preset()}-${meta.seed.toString(36)}`, bufferId, analysis });
+        const s = project.findSample(m.id);
+        s.license = meta.license;
+        status(`✓ ${m.name} · ${buffer.duration.toFixed(1)}s · ${m.bpm || '?'} bpm · ${m.onsets} onsets · seed ${meta.seed} · ${meta.license}`);
+        addMsg('Forge', `Render fertig: ${m.name} (nur importiert — Co-Pilot kann mappen)`);
+        renderAll();
+      } catch (err) { status('Fail: ' + (err.message || err)); }
+    });
+    $('#btnStyleClone') && ($('#btnStyleClone').onclick = () => window.LT_COPILOT_API?.chains.style_clone());
+    $('#btnEssencePad') && ($('#btnEssencePad').onclick = () => {
+      const s = project.pads[project.selectedPad];
+      const buf = s?.bufferId ? engine.getBuffer(s.bufferId) : null;
+      if (!buf) { toast('Pad mit decodiertem Sample wählen'); return; }
+      const sig = LT_ESSENCE.signatureFromBuffer(buf, { name: s.name, origin: 'reference' });
+      addMsg('Essence', `${s.name}: ${sig.bpm || '?'}bpm · KEY ${sig.key} (${sig.key_confidence}) · energy ${sig.energy} · density ${sig.onset_density}/s · swing ${sig.swing}`);
+      status(`Essence ${s.name}: ${sig.bpm || '—'}bpm · ${sig.key} · E ${sig.energy} · D ${sig.onset_density}/s · SW ${sig.swing}`);
+      window.LT_COPILOT_API && (window.LT_COPILOT_API.state.lastEssence = sig);
+      if (deltaEl()) deltaEl().textContent = '';
+    });
+
+    // engine-Δ: forged vs pad essence (server bridge, honest fallback client-side)
+    window.LT_measureTreue = async (forgedBuffer, refBuffer) => {
+      try {
+        const [a, b] = [LT_ESSENCE.wavFromBuffer(refBuffer), LT_ESSENCE.wavFromBuffer(forgedBuffer)];
+        const [ra, rb] = await Promise.all([a.arrayBuffer(), b.arrayBuffer()]);
+        const b64 = (ab) => btoa(String.fromCharCode(...new Uint8Array(ab)));
+        const r = await fetch('api/essence/delta', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wav_a: b64(ra), wav_b: b64(rb) }),
+        });
+        const d = await r.json();
+        if (d.ok && d.pairs?.length) return { engine: true, distance: d.pairs[0].distance, similarity: d.pairs[0].similarity, relation: d.pairs[0].relation };
+      } catch (e) { /* static fallback */ }
+      const sa = LT_ESSENCE.signatureFromBuffer(refBuffer, {});
+      const sb = LT_ESSENCE.signatureFromBuffer(forgedBuffer, {});
+      const dd = LT_ESSENCE.essenceDelta(sa, sb);
+      return { engine: false, distance: dd.distance, similarity: dd.similarity };
+    };
+  })();
+
+  // ——— CO-PILOT boot ———
+  if (window.LT_COPILOT) window.LT_COPILOT.init(window.LT);
 
   // ——— FX LAB: rack, flex, master ———
   (function initLab() {
