@@ -1092,6 +1092,11 @@
     $('#btnForge') && ($('#btnForge').onclick = () => {
       window.LT_COPILOT_API?.chains.forge_to_pads(preset());
     });
+    $('#btnNeural') && ($('#btnNeural').onclick = () => {
+      status('magenta lädt… (erstes Mal ~10–20s, CDN + Checkpoint)');
+      window.LT_COPILOT_API?.chains.neural_kit()
+        .then((r) => status(r ? '✓ NEURAL GROOVE in A1+A2 — Play drücken' : 'neural fail — siehe Chat'));
+    });
     $('#btnForgeOnly') && ($('#btnForgeOnly').onclick = async () => {
       status('rendere…');
       try {

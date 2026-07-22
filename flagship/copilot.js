@@ -70,7 +70,55 @@
     }
   }
 
+  /** pick best real sample per role from library */
+  function pickRoleSample(type) {
+    const cands = LT.project.library.filter((s) => s.real && s.type === type);
+    return cands.length ? cands[(Math.random() * cands.length) | 0] : null;
+  }
+
   const chains = {
+    /** neural_kit: magenta DrumsRNN groove on REAL kit samples → pattern A1/A2 */
+    neural_kit: () => runChain('NEURAL KIT (magenta DrumsRNN)', [
+      ['Kit aus echten Samples', async () => {
+        const roles = ['kick', 'snare', 'hat', 'perc'];
+        const pads = {};
+        for (let i = 0; i < roles.length; i++) {
+          const s = pickRoleSample(roles[i]);
+          if (!s) throw new Error('kein Sample für ' + roles[i]);
+          LT.project.assign_pad(i, s.id);
+          pads[roles[i]] = { pad: i, name: s.name };
+        }
+        LT.addMsg('Neural', 'Kit: ' + Object.entries(pads).map(([r, v]) => `${r}=P${v.pad + 1} ${v.name.slice(0, 16)}`).join(' · '));
+        return pads;
+      }],
+      ['DrumsRNN Groove (Apache, im Browser)', async (pads) => {
+        if (!global.LT_NEURAL) throw new Error('neural.js fehlt');
+        const g = await LT_NEURAL.drumGroove({
+          bars: 2, temperature: 1.15,
+          onStatus: (t) => LT.toast('magenta: ' + t),
+        });
+        return { pads, g };
+      }],
+      ['Pattern A1+A2 schreiben', async ({ pads, g }) => {
+        const rolePad = { kick: 0, snare: 1, hat: 2, perc: 3 };
+        g.steps.forEach((roles, s) => {
+          const pat = s < 16 ? 'A1' : 'A2';
+          const step = s % 16;
+          for (const [role, vel] of Object.entries(roles)) {
+            if (vel > 0) {
+              LT.project.patternId = pat;
+              LT.project.set_step(rolePad[role], step, +vel.toFixed(2));
+            }
+          }
+        });
+        LT.project.patternId = 'A1';
+        LT.renderAll();
+        LT.addMsg('Neural', `Groove geschrieben: ${g.notes} Noten → A1+A2 (temp ${g.temperature}) · Apache-2.0 magenta`);
+        return true;
+      }],
+      ['Auto Mix', async () => { LT_MASTER.autoMix(LT.project, LT.engine); LT.renderAll(); return true; }],
+    ]),
+
     /** Forge original track → import → chop → pads 9–16 → automix */
     forge_to_pads: (preset) => runChain(`FORGE→PADS (${preset})`, [
       ['Forge rendert Original-Track (echte Samples)', async () => {
@@ -205,9 +253,9 @@
 
     if (state.busy) return [{ label: '…', hint: 'Kette läuft', run: null }];
     if (padsUsed === 0) {
+      out.push({ label: 'NEURAL KIT ✦', hint: 'magenta Groove, echte Samples', run: () => chains.neural_kit() });
       out.push({ label: 'FORGE ▶ KIT', hint: 'Original-Track generieren + auf Pads', run: () => chains.forge_to_pads('dusty-boombap') });
       out.push({ label: 'FIRST BEAT', hint: 'Crew-Mission', run: () => LT.startMission('first_beat') });
-      out.push({ label: 'PACK ▶ PADS', hint: 'echte Samples', run: () => document.querySelector('#btnLoadPack')?.click() });
       return out;
     }
     if (sel && selBuf && (sel.type === 'loop' || (sel.duration ?? 0) > 2)) {

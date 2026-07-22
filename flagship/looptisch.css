@@ -1721,3 +1721,105 @@ body {
 .seq-grid .cell.on {
   box-shadow: 0 0 12px oklch(0.68 0.22 355 / 0.35), inset 0 0 0 1px oklch(0.68 0.22 355 / 0.5);
 }
+
+/* ================= DESIGN V3 · farbig · lebendig · nicht altbacken ================= */
+:root {
+  --c-kick: oklch(0.68 0.24 15);
+  --c-snare: oklch(0.78 0.18 75);
+  --c-hat: oklch(0.8 0.15 210);
+  --c-perc: oklch(0.8 0.2 150);
+  --c-melodic: oklch(0.68 0.24 310);
+  --c-loop: oklch(0.8 0.16 175);
+}
+
+/* — Pads: volle Typ-Farbe, Glow, modern — */
+.pad {
+  border-radius: 14px;
+  border: 1px solid oklch(1 0 0 / 0.1);
+  background: oklch(0.16 0.015 280);
+  box-shadow: inset 0 1px 0 oklch(1 0 0 / 0.06), 0 4px 14px oklch(0 0 0 / 0.35);
+}
+.pad[data-type="kick"]    { --tc: var(--c-kick); }
+.pad[data-type="snare"]   { --tc: var(--c-snare); }
+.pad[data-type="hat"]     { --tc: var(--c-hat); }
+.pad[data-type="perc"]    { --tc: var(--c-perc); }
+.pad[data-type="melodic"] { --tc: var(--c-melodic); }
+.pad[data-type="loop"]    { --tc: var(--c-loop); }
+.pad:not(.empty) {
+  background:
+    linear-gradient(165deg, color-mix(in oklch, var(--tc, var(--hit)) 26%, transparent), oklch(0.14 0.01 280) 78%);
+  border-color: color-mix(in oklch, var(--tc, var(--hit)) 45%, transparent);
+  box-shadow:
+    inset 0 1px 0 oklch(1 0 0 / 0.08),
+    0 4px 18px color-mix(in oklch, var(--tc, var(--hit)) 22%, transparent);
+}
+.pad:not(.empty) .idx { color: var(--tc, var(--hit)); text-shadow: 0 0 12px var(--tc); }
+.pad:not(.empty) .sub { color: color-mix(in oklch, var(--tc, var(--hit)) 65%, white); }
+.pad:not(.empty):hover {
+  transform: translateY(-2px) scale(1.02);
+  border-color: var(--tc, var(--hit));
+  box-shadow: 0 8px 28px color-mix(in oklch, var(--tc, var(--hit)) 45%, transparent);
+}
+.pad.sel {
+  box-shadow: 0 0 0 2px var(--tc, var(--acc-2)), 0 8px 30px color-mix(in oklch, var(--tc, var(--acc-2)) 40%, transparent) !important;
+}
+.pad.hit {
+  animation: padHitV3 300ms cubic-bezier(.2,.9,.25,1.35);
+}
+@keyframes padHitV3 {
+  0% { transform: scale(0.9); filter: brightness(2.2) saturate(1.6); box-shadow: 0 0 0 4px var(--tc), 0 0 44px var(--tc); }
+  55% { transform: scale(1.06); filter: brightness(1.4); }
+  100% { transform: scale(1); filter: none; }
+}
+.pad-wave { filter: drop-shadow(0 0 5px color-mix(in oklch, var(--tc, var(--hit)) 60%, transparent)); }
+
+/* — Header: lebendige Brand — */
+.rack {
+  background:
+    linear-gradient(180deg, oklch(0.19 0.03 340 / 0.55), transparent 42%),
+    linear-gradient(180deg, var(--chassis-2), var(--chassis) 30%, oklch(0.125 0.01 280));
+  border-bottom: 1px solid oklch(0.68 0.22 355 / 0.25);
+}
+.logo-name {
+  background: linear-gradient(90deg, var(--acc), var(--acc-2) 70%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+.hw-btn.play {
+  background: linear-gradient(135deg, var(--acc), oklch(0.55 0.22 330));
+  border-color: transparent;
+  box-shadow: 0 0 18px var(--hit-glow);
+}
+.hw-btn.rec { border-color: oklch(0.68 0.24 15 / 0.6); color: var(--c-kick); }
+
+/* — Missions + Crew: bunter — */
+.missions button, .crew {
+  border-radius: 12px;
+  transition: transform 140ms cubic-bezier(.2,.9,.3,1.4), box-shadow 180ms, border-color 180ms;
+}
+.missions button:hover, .crew:hover {
+  transform: translateY(-2px);
+  border-color: var(--acc-2);
+  box-shadow: 0 6px 22px oklch(0.75 0.17 195 / 0.25);
+}
+
+/* — NEURAL Button: eigenes Leuchten — */
+.mini.neural {
+  background: linear-gradient(135deg, oklch(0.68 0.24 310), oklch(0.55 0.22 270));
+  color: oklch(0.99 0 0);
+  border-color: transparent;
+  box-shadow: 0 2px 16px oklch(0.68 0.24 310 / 0.45);
+}
+.mini.neural:hover { filter: brightness(1.25); }
+
+/* — Seq-Zellen: Typ-Farbtupfer — */
+.seq-grid .cell.on {
+  background: linear-gradient(135deg, var(--acc), oklch(0.5 0.2 330));
+  border-color: transparent;
+}
+
+/* — Mixer: farbige Fader-Spur — */
+.mixer .ch { border-radius: 10px; }
