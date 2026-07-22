@@ -1102,6 +1102,21 @@
       window.LT_COPILOT_API?.chains.neural_track()
         .then((r) => status(r ? '✓ VAE TRIO importiert + gechopt — Pads 9–16' : 'vae fail — siehe Chat'));
     });
+    $('#btnMorph') && ($('#btnMorph').onclick = () => {
+      status('VAE MORPH: 2 Seeds + Interpolation…');
+      window.LT_COPILOT_API?.chains.neural_morph()
+        .then((r) => status(r ? '✓ 4 Morphs in Library — Morph 1 auf Pads' : 'morph fail — siehe Chat'));
+    });
+    $('#btnMel') && ($('#btnMel').onclick = () => {
+      status('mel_2bar Melodie-Lane…');
+      window.LT_COPILOT_API?.chains.neural_melody()
+        .then((r) => status(r ? '✓ Melodie-Lane in Library' : 'mel fail — siehe Chat'));
+    });
+    $('#btnVaeMaster') && ($('#btnVaeMaster').onclick = () => {
+      status('VAE + Matchering (Referenz = selektiertes Pad)…');
+      window.LT_COPILOT_API?.chains.neural_mastered()
+        .then((r) => status(r ? '✓ VAE-Master importiert + gechopt' : 'vae-master fail — siehe Chat (Referenz-Pad gewählt?)'));
+    });
     $('#btnForgeOnly') && ($('#btnForgeOnly').onclick = async () => {
       status('rendere…');
       try {

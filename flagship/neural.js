@@ -12,6 +12,7 @@
   const MM_URL = 'https://cdn.jsdelivr.net/npm/@magenta/music@1.23.1/dist/magentamusic.min.js';
   const CKPT_DRUMS = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_rnn/drum_kit_rnn';
   const CKPT_VAE_TRIO = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/trio_4bar';
+  const CKPT_VAE_MEL = 'https://storage.googleapis.com/magentadata/js/checkpoints/music_vae/mel_2bar_small';
 
   let ready = null;
   let statusMsg = 'idle';
@@ -40,8 +41,11 @@
       say('lade MusicVAE trio_4bar…');
       const trio = new global.mm.MusicVAE(CKPT_VAE_TRIO);
       await trio.initialize();
+      say('lade MusicVAE mel_2bar…');
+      const mel = new global.mm.MusicVAE(CKPT_VAE_MEL);
+      await mel.initialize();
       say('bereit');
-      return { mm: global.mm, drums, trio };
+      return { mm: global.mm, drums, trio, mel };
     })();
     ready.catch((e) => { statusMsg = 'fail: ' + e.message; ready = null; });
     return ready;
@@ -111,56 +115,104 @@
    * Returns { drums, bass, melody, bars: 4, beatsPerBar: 4, transposed, key }
    * Zeiten in Beats (quarters), 4 Beats/Bar → step = beat * 4 (16tel).
    */
-  async function trioSample({ temperature = 1.0, key = null, onStatus } = {}) {
-    const { trio } = await ensure(onStatus);
-    const say = (t) => { if (onStatus) onStatus(t); };
-    say('MusicVAE komponiert (trio_4bar)…');
-    const seqs = await trio.sample(1, temperature);
-    const seq = seqs[0];
-    const notes = seq.notes || [];
-
+  /** Rollen-Split einer Trio-Sequence (instrument 0=mel,1=bass,2=drums, defensiv) */
+  function splitTrio(seq) {
     const drums = [], rawMel = [], rawBass = [];
-    // instrument: 0=melody, 1=bass, 2=drums (trio_4bar Konvention, defensiv)
     const byInst = { 0: [], 1: [], 2: [] };
-    for (const n of notes) (byInst[n.instrument] || []).push(n);
-    for (const n of byInst[2]) drums.push(n);
+    for (const n of (seq.notes || [])) (byInst[n.instrument] || []).push(n);
+    drums.push(...byInst[2]);
     rawMel.push(...byInst[0]);
     rawBass.push(...byInst[1]);
-    // Fallback, falls Instrumente anders verteilt: Drums via isDrum/pitch-Heuristik
     if (!drums.length) {
-      for (const n of notes) {
-        if (n.isDrum || (n.pitch >= 35 && n.pitch <= 59 && n.instrument === undefined)) drums.push(n);
+      for (const n of (seq.notes || [])) {
+        if (n.isDrum) drums.push(n);
         else if (n.pitch < 48) rawBass.push(n);
         else rawMel.push(n);
       }
     }
+    return { drums, rawMel, rawBass, totalNotes: (seq.notes || []).length };
+  }
 
-    // Root-Schätzung: häufigste Bass-PC → auf Key-Grundton transponieren
-    let shift = 0, estRoot = null;
-    if (key && rawBass.length) {
-      const pcCount = new Array(12).fill(0);
-      rawBass.forEach((n) => pcCount[n.pitch % 12]++);
-      estRoot = pcCount.indexOf(Math.max(...pcCount));
-      const m = String(key).match(/^([A-G][#b]?)/);
-      const target = NOTE_PC[m ? m[1] : 'A'] ?? 9;
-      shift = ((target - estRoot) % 12 + 12) % 12;
-      if (shift > 6) shift -= 12; // kürzester Weg
-    }
+  function keyShift(rawBass, key) {
+    if (!key || !rawBass.length) return { shift: 0, estRoot: null };
+    const pcCount = new Array(12).fill(0);
+    rawBass.forEach((n) => pcCount[n.pitch % 12]++);
+    const estRoot = pcCount.indexOf(Math.max(...pcCount));
+    const m = String(key).match(/^([A-G][#b]?)/);
+    const target = NOTE_PC[m ? m[1] : 'A'] ?? 9;
+    let shift = ((target - estRoot) % 12 + 12) % 12;
+    if (shift > 6) shift -= 12;
+    return { shift, estRoot };
+  }
+
+  function finishComp(split, shift, key, bars = 4) {
     const fix = (n) => ({
       pitch: n.pitch + shift,
       startBeat: n.startTime, endBeat: n.endTime,
       vel: Math.max(0.3, Math.min(1, (n.velocity || 80) / 110)),
     });
-    const out = {
-      drums: drums.map((n) => ({ ...fix(n), gm: n.pitch })), // GM-Pitch für Rollenmap
-      bass: rawBass.map(fix),
-      melody: rawMel.map(fix),
-      bars: 4, beatsPerBar: 4,
-      transposed: shift, estRoot, key,
-      totalNotes: notes.length,
+    return {
+      drums: split.drums.map((n) => ({ ...fix(n), gm: n.pitch })),
+      bass: split.rawMel ? split.rawBass.map(fix) : [],
+      melody: split.rawMel ? split.rawMel.map(fix) : [],
+      bars, beatsPerBar: 4,
+      transposed: shift, key,
+      totalNotes: split.totalNotes,
     };
+  }
+
+  async function trioSample({ temperature = 1.0, key = null, onStatus } = {}) {
+    const { trio } = await ensure(onStatus);
+    const say = (t) => { if (onStatus) onStatus(t); };
+    say('MusicVAE komponiert (trio_4bar)…');
+    const seqs = await trio.sample(1, temperature);
+    const split = splitTrio(seqs[0]);
+    const { shift, estRoot } = keyShift(split.rawBass, key);
+    const out = finishComp(split, shift, key);
+    out.estRoot = estRoot;
+    out._seq = seqs[0]; // für interpolate()
     say(`trio: ${out.drums.length} drums · ${out.bass.length} bass · ${out.melody.length} melody${shift ? ` · ${shift > 0 ? '+' : ''}${shift}st → ${key}` : ''}`);
     return out;
+  }
+
+  /**
+   * Latent-Interpolation: zwei Trio-Kompositionen → N Morphs dazwischen.
+   * VAE-Superkraft: Zwischenstände sind musikalisch kohärente Mischungen.
+   * Shared key-shift (von seqA) → alle Morphs in derselben Tonart.
+   */
+  async function trioInterpolate({ temperature = 1.0, steps = 4, key = null, onStatus } = {}) {
+    const { trio } = await ensure(onStatus);
+    const say = (t) => { if (onStatus) onStatus(t); };
+    say('VAE: zwei Seeds komponieren…');
+    const [a, b] = await trio.sample(2, temperature);
+    say(`VAE interpolate ×${steps}…`);
+    const morphs = await trio.interpolate([a, b], steps);
+    const splitA = splitTrio(a);
+    const { shift } = keyShift(splitA.rawBass, key);
+    const out = morphs.map((seq, i) => {
+      const c = finishComp(splitTrio(seq), shift, key, 4);
+      c.morphIndex = i;
+      return c;
+    });
+    say(`morph: ${out.length} Varianten · shift ${shift}`);
+    return { morphs: out, keyA: a, keyB: b, shift };
+  }
+
+  /** mel_2bar: reine Melodie-Lane (kein Schlagzeug/Bass) */
+  async function melodySample({ temperature = 1.0, key = null, onStatus } = {}) {
+    const { mel } = await ensure(onStatus);
+    const say = (t) => { if (onStatus) onStatus(t); };
+    say('MusicVAE melodiert (mel_2bar)…');
+    const seqs = await mel.sample(1, temperature);
+    const notes = (seqs[0].notes || []);
+    const { shift } = keyShift(notes, key);
+    const fix = (n) => ({
+      pitch: n.pitch + shift,
+      startBeat: n.startTime, endBeat: n.endTime,
+      vel: Math.max(0.3, Math.min(1, (n.velocity || 80) / 110)),
+    });
+    say(`melody: ${notes.length} Noten · shift ${shift}`);
+    return { melody: notes.map(fix), bars: 2, beatsPerBar: 4, transposed: shift, key, totalNotes: notes.length };
   }
 
   /** GM-Drum-Rolle */
@@ -248,7 +300,7 @@
   }
 
   global.LT_NEURAL = {
-    drumGroove, trioSample, renderTrio, drumRoleOf, ensure,
+    drumGroove, trioSample, trioInterpolate, melodySample, renderTrio, drumRoleOf, ensure,
     get status() { return statusMsg; },
   };
 })(window);

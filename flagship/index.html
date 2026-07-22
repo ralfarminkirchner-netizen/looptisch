@@ -217,6 +217,11 @@
           <div class="forge-panel">
             <div class="forge-status" id="forgeStatus">kein Render — Preset wählen, FORGE drücken. Output: 16 Bars, lizenzfrei, wird auto-analysiert + gechopt.</div>
             <div class="forge-row">
+              <button type="button" class="mini neural" id="btnMorph" title="2 VAE-Seeds → Latent-Interpolation ×4 — kohärente Morph-Varianten">VAE MORPH</button>
+              <button type="button" class="mini neural" id="btnMel" title="mel_2bar: reine Melodie-Lane durch Lead-Sample">VAE MEL</button>
+              <button type="button" class="mini neural" id="btnVaeMaster" title="VAE-Track direkt durch Matchering (Referenz = selektiertes Pad)">VAE ▶ MASTER</button>
+            </div>
+            <div class="forge-row">
               <button type="button" class="mini" id="btnStyleClone">STYLE-KLON (Pad→Essence→Forge→Δ)</button>
               <button type="button" class="mini" id="btnEssencePad">ESSENCE vom Pad</button>
               <span class="forge-delta" id="forgeDelta"></span>

@@ -76,7 +76,146 @@
     return cands.length ? cands[(Math.random() * cands.length) | 0] : null;
   }
 
+  /** Matchering 2.0 lokal: target vs reference → mastered AudioBuffer */
+  async function matcheringMaster(target, ref) {
+    const [ta, ra] = await Promise.all([
+      LT_ESSENCE.wavFromBuffer(target).arrayBuffer(),
+      LT_ESSENCE.wavFromBuffer(ref).arrayBuffer(),
+    ]);
+    const r = await fetch('api/master', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wav_target: LT_ESSENCE.b64encode(ta), wav_ref: LT_ESSENCE.b64encode(ra) }),
+    });
+    const d = await r.json();
+    if (!d.ok) throw new Error(d.error || 'master failed');
+    const raw = LT_ESSENCE.b64decodeToBytes(d.wav_mastered);
+    const buf = await LT.engine.ctx.decodeAudioData(raw.buffer);
+    LT.addMsg('Master', `Matchering ✓ ${d.engine} · Referenz nur als Analyse, kein Referenz-Audio im Output`);
+    return buf;
+  }
+
+  /** shared: trio render + import + chops + automix (used by track/morph/mastered) */
+  async function renderAndImport(comp, kit, name, extraMsg = '') {
+    const { buffer, meta } = await LT_NEURAL.renderTrio(comp, kit, {
+      bpm: LT.project.bpm, brightness: 0.5,
+    });
+    const m = importBuffer(buffer, name, {
+      license: 'magenta VAE (Apache 2.0) komposition · gerendert via Library-Samples',
+    });
+    LT.addMsg('Neural', `${name} ✓ ${comp.totalNotes} Noten → ${buffer.duration.toFixed(1)}s${extraMsg} · ${m.onsets} onsets`);
+    return { m, buffer, meta };
+  }
+
   const chains = {
+    /** neural_morph: 2 VAE-Seeds → Latent-Interpolation ×4 → alle Varianten in Library */
+    neural_morph: () => runChain('VAE MORPH (Latent-Interpolation)', [
+      ['Zwei Seeds + interpolate ×4', async () => {
+        const r = await LT_NEURAL.trioInterpolate({
+          temperature: 1.0, steps: 4, key: LT.project.key,
+          onStatus: (t) => LT.toast('magenta: ' + t),
+        });
+        return r;
+      }],
+      ['Kit aus echten Samples', async (r) => {
+        const kit = await LT_FORGE.pickKit(LT.engine, LT.project, Math.random);
+        if (!kit) throw new Error('kein Kit ladbar');
+        return { r, kit };
+      }],
+      ['4 Morphs rendern + importieren', async ({ r, kit }) => {
+        const names = [];
+        for (const comp of r.morphs) {
+          const { m, buffer, meta } = await renderAndImport(comp, kit, `vae-morph${comp.morphIndex}-${Date.now().toString(36)}`, ` · morph ${comp.morphIndex + 1}/4`);
+          names.push(m.name);
+          if (comp.morphIndex === 0) state.lastForge = { buffer, meta };
+        }
+        return names;
+      }],
+      ['Erste Morph ▶ Pads 9–16', async (names) => {
+        const first = LT.project.library.find((s) => s.name === names[0].replace(/\.[^.]+$/, '')) || LT.project.library.find((s) => s.name.startsWith('vae-morph0'));
+        if (first) {
+          LT.project.selectedSampleId = first.id;
+          LT.project.detect_onsets(first.id);
+          LT.project.map_chops_to_pads(8);
+        }
+        LT.renderAll();
+        LT.addMsg('Neural', `MORPH ✓ 4 kohärente Varianten in der Library: ${names.map((n) => n.slice(0, 14)).join(' · ')}`);
+        return true;
+      }],
+      ['Auto Mix', async () => { LT_MASTER.autoMix(LT.project, LT.engine); LT.renderAll(); return true; }],
+    ]),
+
+    /** neural_melody: mel_2bar reine Melodie-Lane durch Lead-Sample */
+    neural_melody: () => runChain('VAE MEL (mel_2bar Lane)', [
+      ['mel_2bar Melodie', async () => {
+        const comp = await LT_NEURAL.melodySample({
+          temperature: 1.0, key: LT.project.key,
+          onStatus: (t) => LT.toast('magenta: ' + t),
+        });
+        return comp;
+      }],
+      ['Lead-Sample laden', async (comp) => {
+        const s = pickRoleSample('melodic');
+        if (!s) throw new Error('kein melodisches Sample');
+        const buffer = await LT_FORGE.loadBufferFor(LT.engine, s);
+        if (!buffer) throw new Error('Lead nicht ladbar');
+        return { comp, kit: { chordSrc: { sample: s, buffer } } };
+      }],
+      ['Render + Import', async ({ comp, kit }) => {
+        // renderTrio mit leerem drums/bass: nur Melodie-Lane
+        const { m } = await renderAndImport(
+          { drums: [], bass: [], melody: comp.melody, bars: comp.bars, beatsPerBar: 4, transposed: comp.transposed, key: comp.key, totalNotes: comp.totalNotes },
+          kit, `vae-mel-${Date.now().toString(36)}`, ' · melodie-only',
+        );
+        LT.renderAll();
+        return m;
+      }],
+    ]),
+
+    /** neural_mastered: VAE-Track → Matchering Referenz-Mastering aufs selektierte Pad */
+    neural_mastered: () => runChain('VAE → REF-MASTER', [
+      ['MusicVAE Trio', async () => {
+        const comp = await LT_NEURAL.trioSample({
+          temperature: 1.0, key: LT.project.key,
+          onStatus: (t) => LT.toast('magenta: ' + t),
+        });
+        return comp;
+      }],
+      ['Kit + Render', async (comp) => {
+        const kit = await LT_FORGE.pickKit(LT.engine, LT.project, Math.random);
+        if (!kit) throw new Error('kein Kit ladbar');
+        const { buffer } = await LT_NEURAL.renderTrio(comp, kit, { bpm: LT.project.bpm });
+        state.lastForge = { buffer, meta: comp };
+        return buffer;
+      }],
+      ['Matchering aufs Referenz-Pad', async (buffer) => {
+        let ref = bufferOf(selectedPadSample());
+        let refName = selectedPadSample()?.name;
+        // Matchering braucht ≥ ~4s Referenz — sonst: längsten Loop der Library
+        if (!ref || ref.duration < 4) {
+          const loops = LT.project.library
+            .filter((s) => s.real && s.type === 'loop' && (s.duration || 0) > 5)
+            .sort((a, b) => (b.duration || 0) - (a.duration || 0));
+          for (const cand of loops.slice(0, 5)) {
+            ref = await LT_FORGE.loadBufferFor(LT.engine, cand).catch(() => null);
+            if (ref && ref.duration >= 4) { refName = cand.name; break; }
+            ref = null;
+          }
+          if (!ref) throw new Error('keine Referenz ≥4s ladbar');
+          LT.addMsg('Master', `Referenz (Pad zu kurz): ${refName.slice(0, 40)} (${ref.duration.toFixed(1)}s)`);
+        }
+        return matcheringMaster(buffer, ref);
+      }],
+      ['Import mastered', async (buf) => {
+        const m = importBuffer(buf, `vae-mastered-${Date.now().toString(36)}`, {
+          license: 'magenta VAE (Apache 2.0) + matchering · referenz=analyse-only',
+        });
+        LT.project.detect_onsets(m.id);
+        LT.project.map_chops_to_pads(8);
+        LT.renderAll();
+        return m;
+      }],
+    ]),
+
     /** neural_track: MusicVAE trio (melody+bass+drums) → real samples → import → chops */
     neural_track: () => runChain('VAE TRIO (MusicVAE → echte Samples)', [
       ['MusicVAE komponiert Trio', async () => {
