@@ -1097,6 +1097,11 @@
       window.LT_COPILOT_API?.chains.neural_kit()
         .then((r) => status(r ? '✓ NEURAL GROOVE in A1+A2 — Play drücken' : 'neural fail — siehe Chat'));
     });
+    $('#btnVae') && ($('#btnVae').onclick = () => {
+      status('MusicVAE lädt + komponiert… (erstes Mal ~20–40s, zwei Checkpoints)');
+      window.LT_COPILOT_API?.chains.neural_track()
+        .then((r) => status(r ? '✓ VAE TRIO importiert + gechopt — Pads 9–16' : 'vae fail — siehe Chat'));
+    });
     $('#btnForgeOnly') && ($('#btnForgeOnly').onclick = async () => {
       status('rendere…');
       try {

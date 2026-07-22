@@ -77,6 +77,41 @@
   }
 
   const chains = {
+    /** neural_track: MusicVAE trio (melody+bass+drums) → real samples → import → chops */
+    neural_track: () => runChain('VAE TRIO (MusicVAE → echte Samples)', [
+      ['MusicVAE komponiert Trio', async () => {
+        if (!global.LT_NEURAL) throw new Error('neural.js fehlt');
+        const comp = await LT_NEURAL.trioSample({
+          temperature: 1.0, key: LT.project.key,
+          onStatus: (t) => LT.toast('magenta: ' + t),
+        });
+        return comp;
+      }],
+      ['Kit aus echten Samples', async (comp) => {
+        const kit = await LT_FORGE.pickKit(LT.engine, LT.project, Math.random);
+        if (!kit) throw new Error('kein Kit ladbar');
+        return { comp, kit };
+      }],
+      ['Render durch echte Samples', async ({ comp, kit }) => {
+        const { buffer, meta } = await LT_NEURAL.renderTrio(comp, kit, {
+          bpm: LT.project.bpm, brightness: 0.5,
+        });
+        state.lastForge = { buffer, meta };
+        const m = importBuffer(buffer, `vae-trio-${Date.now().toString(36)}`, {
+          license: 'magenta VAE (Apache 2.0) komposition · gerendert via Library-Samples',
+        });
+        LT.addMsg('Neural', `VAE TRIO ✓ ${comp.totalNotes} Noten → ${buffer.duration.toFixed(1)}s · key ${LT.project.key} (shift ${comp.transposed}) · ${m.onsets} onsets`);
+        return m;
+      }],
+      ['Chops ▶ Pads 9–16', async (m) => {
+        LT.project.detect_onsets(m.id);
+        const r = LT.project.map_chops_to_pads(8);
+        LT.renderAll();
+        return r;
+      }],
+      ['Auto Mix', async () => { LT_MASTER.autoMix(LT.project, LT.engine); LT.renderAll(); return true; }],
+    ]),
+
     /** neural_kit: magenta DrumsRNN groove on REAL kit samples → pattern A1/A2 */
     neural_kit: () => runChain('NEURAL KIT (magenta DrumsRNN)', [
       ['Kit aus echten Samples', async () => {

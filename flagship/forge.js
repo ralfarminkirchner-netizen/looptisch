@@ -449,5 +449,5 @@
     return forge(style);
   }
 
-  global.LT_FORGE = { forge, forgeSampled, forgeSmart, PRESETS };
+  global.LT_FORGE = { forge, forgeSampled, forgeSmart, pickKit, loadBufferFor, PRESETS };
 })(window);
