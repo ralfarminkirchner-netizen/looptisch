@@ -1,0 +1,6 @@
+flagship/library/packs/
+docs/library/packs/
+.venv-mg/
+.git/
+node_modules/
+**/sfx-lab/
