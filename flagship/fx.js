@@ -269,6 +269,13 @@
     },
   ];
 
+  const FX_CATS = {
+    filter: 'tone', overdrive: 'drive', lofi: 'drive', cabinet: 'drive', exciter: 'drive',
+    chorus: 'mod', phaser: 'mod', flanger: 'mod', tremolo: 'mod', gate: 'mod', autowah: 'mod', ringmod: 'mod', vibrato: 'mod',
+    delay: 'space', reverb: 'space', widener: 'space',
+  };
+  DEFS.forEach((d) => { d.cat = FX_CATS[d.id] || 'misc'; });
+
   class FXRack {
     constructor(ctx) {
       this.ctx = ctx;
@@ -282,7 +289,7 @@
         const slotIn = ctx.createGain();
         slotIn.connect(dry); dry.connect(sum);
         slotIn.connect(fx.in); fx.out.connect(wet); wet.connect(sum);
-        return { id: def.id, name: def.name, fx, dry, wet, in: slotIn, out: sum, enabled: false, amount: def.def };
+        return { id: def.id, name: def.name, cat: def.cat, fx, dry, wet, in: slotIn, out: sum, enabled: false, amount: def.def };
       });
       // serial chain
       let prev = this.input;

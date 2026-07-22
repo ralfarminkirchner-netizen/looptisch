@@ -683,6 +683,18 @@
         engine.storeBuffer(bufferId, audioBuffer);
         const meta = project.import_sample({ name: file.name, bufferId, analysis });
         imported.push(meta);
+        // MAGNET: BPM-Loops rasten automatisch aufs Projekt ein
+        if (analysis.bpm > 40 && Math.abs(analysis.bpm - project.bpm) > 2 && audioBuffer.duration < 25) {
+          try {
+            const ratio = analysis.bpm / project.bpm;
+            const chans = LT_DSP.toChannels(audioBuffer);
+            const stretched = await LT_DSP.wsola(chans, audioBuffer.sampleRate, ratio);
+            engine.storeBuffer(bufferId, LT_DSP.fromChannels(engine.ctx, stretched, audioBuffer.sampleRate));
+            const s = project.findSample(meta.id);
+            if (s) { s.bpm = project.bpm; s.stretch = 1; }
+            addMsg('Magnet', `${meta.name}: ${analysis.bpm}→${project.bpm} bpm gestretcht`);
+          } catch (e) { /* Original behalten */ }
+        }
         logTool({ name: 'import_sample', args: { name: file.name }, ok: true, result: meta });
         if (assignToPad != null) {
           project.assign_pad(assignToPad, meta.id);
@@ -1185,7 +1197,7 @@
     const rackEl = $('#fxRack');
     if (rackEl && rack()) {
       rackEl.innerHTML = rack().slots.map((s) => `
-        <div class="fx-chip" data-fx="${s.id}">
+        <div class="fx-chip" data-fx="${s.id}" data-cat="${s.cat || 'misc'}">
           <button type="button" class="fx-name">${s.name}</button>
           <input type="range" min="0" max="100" value="${Math.round(s.amount * 100)}" />
         </div>`).join('');
@@ -1301,6 +1313,7 @@
       renderMixer();
     };
     $('#btnRefMaster') && ($('#btnRefMaster').onclick = () => window.LT_COPILOT_API?.chains.ref_master());
+    $('#btnMagnet') && ($('#btnMagnet').onclick = () => window.LT_COPILOT_API?.chains.magnet_pad());
 
     // Spectrum im Header
     const spec = $('#spec');

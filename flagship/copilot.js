@@ -113,6 +113,30 @@
     return { m, buffer, meta };
   }
 
+  /** MAGNET: Sample auf Projekt einrasten — trim → BPM-Stretch → Key-Tune → norm */
+  async function magnetFit(sample, buf, onProgress) {
+    const sr = buf.sampleRate;
+    let chans = LT_DSP.toChannels(buf);
+    const steps = [];
+    chans = LT_DSP.trimSilence(chans, sr); steps.push('trim');
+    const bpm = sample.bpm || 0;
+    if (bpm > 40 && Math.abs(bpm - LT.project.bpm) > 2) {
+      const ratio = bpm / LT.project.bpm;
+      chans = await LT_DSP.wsola(chans, sr, ratio, onProgress);
+      sample.bpm = LT.project.bpm; sample.stretch = 1;
+      steps.push(`bpm ${bpm}→${LT.project.bpm}`);
+    }
+    if (sample.type === 'melodic') {
+      const sig = LT_ESSENCE.signatureFromBuffer(LT_DSP.fromChannels(LT.engine.ctx, chans, sr), { name: sample.name });
+      if (sig.key !== '—' && sig.key !== LT.project.key) {
+        chans = await LT_DSP.tuneToScale(chans, sr, LT.project.key, 0.9, onProgress);
+        steps.push(`tune ${sig.key}→${LT.project.key}`);
+      }
+    }
+    chans = LT_DSP.normalize(chans); steps.push('norm');
+    return { chans, steps };
+  }
+
   const chains = {
     /** neural_morph: 2 VAE-Seeds → Latent-Interpolation ×4 → alle Varianten in Library */
     neural_morph: () => runChain('VAE MORPH (Latent-Interpolation)', [
@@ -388,6 +412,23 @@
       }],
     ]),
 
+    /** magnet_pad: selektiertes Pad magnetisch einrasten (trim/stretch/tune/norm) */
+    magnet_pad: () => runChain('MAGNET (auto-fit)', [
+      ['Pad analysieren', async () => {
+        const s = selectedPadSample();
+        const buf = bufferOf(s);
+        if (!buf) throw new Error('Pad ohne decodiertes Sample');
+        return { s, buf };
+      }],
+      ['Magnetisch einrasten', async ({ s, buf }) => {
+        const { chans, steps } = await magnetFit(s, buf, () => {});
+        const nb = LT_DSP.fromChannels(LT.engine.ctx, chans, buf.sampleRate);
+        LT.engine.storeBuffer(s.bufferId, nb);
+        LT.addMsg('Magnet', `${s.name}: ${steps.join(' · ')} → ${nb.duration.toFixed(2)}s`);
+        return steps;
+      }],
+    ], { autoplay: false }),
+
     /** ref_master: matchering 2.0 — last forge render vs selected pad reference (local) */
     ref_master: () => runChain('REF-MASTER (Matchering)', [
       ['Target + Referenz prüfen', async () => {
@@ -432,51 +473,56 @@
     const sel = selectedPadSample();
     const selBuf = bufferOf(sel);
 
-    if (state.busy) return [{ label: '…', hint: 'Kette läuft', run: null }];
+    if (state.busy) return [{ label: '…', why: 'Kette läuft', kind: 'nav', run: null }];
     if (padsUsed === 0) {
-      out.push({ label: 'NEURAL KIT ✦', hint: 'magenta Groove, echte Samples', run: () => chains.neural_kit() });
-      out.push({ label: 'FORGE ▶ KIT', hint: 'Original-Track generieren + auf Pads', run: () => chains.forge_to_pads('dusty-boombap') });
-      out.push({ label: 'FIRST BEAT', hint: 'Crew-Mission', run: () => LT.startMission('first_beat') });
+      out.push({ label: 'NEURAL KIT ✦', why: 'keine Pads belegt — magenta baut Kit + Groove', kind: 'gen', run: () => chains.neural_kit() });
+      out.push({ label: 'FORGE ▶ KIT', why: 'alternativ: prozeduraler Track aus echten Samples', kind: 'gen', run: () => chains.forge_to_pads('dusty-boombap') });
+      out.push({ label: 'PANDRUM spielen', why: 'sofort musikalisch, kein Setup', kind: 'nav', run: () => LT.setMode('pandrum') });
       return out;
     }
     if (sel && selBuf && (sel.type === 'loop' || (sel.duration ?? 0) > 2)) {
-      out.push({ label: 'LOOP ▶ PADS', hint: 'chops mappen 9–16', run: () => chains.loop_to_pads() });
-      out.push({ label: 'STYLE-KLON', hint: 'Essence → Forge → Δ', run: () => chains.style_clone() });
-      out.push({ label: 'TUNE ▶ KEY', hint: `snap ${project.key}`, run: () => document.querySelector('#btnFlexTune')?.click() });
+      out.push({ label: 'LOOP ▶ PADS', why: `${sel.name.slice(0, 18)} ist ein Loop — in Chops legen`, kind: 'proc', run: () => chains.loop_to_pads() });
+      out.push({ label: 'MAGNET', why: `auf ${project.bpm}bpm/${project.key} einrasten`, kind: 'proc', run: () => chains.magnet_pad() });
+      out.push({ label: 'STYLE-KLON', why: 'Stil messen → Forge baut ähnlichen', kind: 'gen', run: () => chains.style_clone() });
       return out;
     }
     if (sel && selBuf && sel.type === 'melodic') {
-      out.push({ label: 'TUNE ▶ KEY', hint: `snap ${project.key}`, run: () => document.querySelector('#btnFlexTune')?.click() });
-      out.push({ label: 'STYLE-KLON', hint: 'Essence → Forge', run: () => chains.style_clone() });
+      out.push({ label: 'TUNE ▶ KEY', why: `melodisch — auf ${project.key} snappen`, kind: 'proc', run: () => document.querySelector('#btnFlexTune')?.click() });
+      out.push({ label: 'STYLE-KLON', why: 'Stil-Vorlage für Forge', kind: 'gen', run: () => chains.style_clone() });
     }
     if (!stepsUsed) {
-      out.push({ label: 'FIRST BEAT', hint: 'Pattern bauen', run: () => LT.startMission('first_beat') });
-      out.push({ label: 'FORGE ▶ PADS', hint: 'frisches Kit', run: () => chains.forge_to_pads('deep-house') });
+      out.push({ label: 'FIRST BEAT', why: 'Pattern ist leer — Grundgerüst bauen', kind: 'gen', run: () => LT.startMission('first_beat') });
+      out.push({ label: 'NEURAL KIT ✦', why: 'oder magenta Groove generieren', kind: 'gen', run: () => chains.neural_kit() });
       return out.slice(0, 3);
     }
     if (!transport.playing) {
-      out.push({ label: '▶ PLAY', hint: 'Space', run: () => { LT.engine.ensure(); LT.transport.toggle(); LT.renderAll(); } });
-      out.push({ label: 'FINISH', hint: 'Auto Mix + Master', run: () => chains.finish() });
-      out.push({ label: 'FORGE VARIATION', hint: 'neues Kit dazu', run: () => chains.forge_to_pads('club-drive') });
+      out.push({ label: '▶ PLAY', why: 'Pattern hat Steps — anhören', kind: 'nav', run: () => { LT.engine.ensure(); LT.transport.toggle(); LT.renderAll(); } });
+      out.push({ label: 'FINISH', why: 'Mix + Master zum Abschluss', kind: 'master', run: () => chains.finish() });
+      out.push({ label: 'VAE MORPH', why: '4 Variationen zum Weiterbauen', kind: 'gen', run: () => chains.neural_morph() });
     } else {
-      out.push({ label: '⏹ STOP', hint: '', run: () => { LT.transport.stop(); LT.renderAll(); } });
-      out.push({ label: 'HALL +', hint: 'Reverb rein', run: () => {
+      out.push({ label: '⏹ STOP', why: 'läuft gerade', kind: 'nav', run: () => { LT.transport.stop(); LT.renderAll(); } });
+      out.push({ label: 'HALL +', why: 'Raum auf den Mix', kind: 'master', run: () => {
         const r = LT.engine.rack; if (r) { r.setEnabled('reverb', true); r.setAmount('reverb', 0.45); }
         document.querySelector('.fx-chip[data-fx="reverb"]')?.classList.add('on');
         LT.toast('FX: HALL an');
       } });
-      out.push({ label: 'FINISH', hint: 'Mix + Master', run: () => chains.finish() });
+      out.push({ label: 'FINISH', why: 'Mix + Master', kind: 'master', run: () => chains.finish() });
     }
     return out.slice(0, 3);
   }
 
   // ——— UI ———
   let rootEl = null;
+  let lastSig = '';
   function render(sugs) {
     if (!rootEl) return;
-    rootEl.innerHTML = `<div class="cop-h"><b>CO-PILOT</b><span>${state.busy ? 'arbeitet…' : 'schlägt vor'}</span></div>`
-      + sugs.map((s, i) => `<button type="button" class="cop-chip" data-i="${i}" ${s.run ? '' : 'disabled'}>
-          <b>${s.label}</b>${s.hint ? `<span>${s.hint}</span>` : ''}</button>`).join('');
+    // Stabilität: nur neu rendern, wenn sich die Vorschläge WIRKLICH ändern
+    const sig = sugs.map((s) => s.label).join('|');
+    if (sig === lastSig) return;
+    lastSig = sig;
+    rootEl.innerHTML = `<div class="cop-h"><b>CO-PILOT</b><span>${state.busy ? 'arbeitet…' : '3 nächste Schritte'}</span></div>`
+      + sugs.map((s, i) => `<button type="button" class="cop-chip kind-${s.kind || 'nav'}" data-i="${i}" ${s.run ? '' : 'disabled'}>
+          <b>${s.label}</b>${s.why ? `<span>${s.why}</span>` : ''}</button>`).join('');
     rootEl.querySelectorAll('.cop-chip').forEach((chip) => {
       chip.onclick = () => { const s = sugs[+chip.dataset.i]; if (s?.run) s.run(); };
     });
