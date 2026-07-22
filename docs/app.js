@@ -1177,6 +1177,7 @@
 
   // ——— CO-PILOT boot ———
   if (window.LT_COPILOT) window.LT_COPILOT.init(window.LT);
+  if (window.LT_GUIDE) window.LT_GUIDE.init(window.LT);
 
   // ——— PANDRUM ———
   if (window.LT_PANDRUM) {
