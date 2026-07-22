@@ -1166,6 +1166,16 @@
   // ——— CO-PILOT boot ———
   if (window.LT_COPILOT) window.LT_COPILOT.init(window.LT);
 
+  // ——— PANDRUM ———
+  if (window.LT_PANDRUM) {
+    const pandrum = new LT_PANDRUM.Pandrum(engine, () => project.key);
+    pandrum.mount($('#pandrumRoot'), addMsg);
+    project.on((ev) => { if (ev.type === 'key') pandrum.refreshKey(); });
+    window.LT.pandrum = pandrum;
+    // Landing: Pandrum zuerst — erster Klick = sofort Musik (+ Audio-Unlock)
+    setMode('pandrum');
+  }
+
   // ——— FX LAB: rack, flex, master ———
   (function initLab() {
     const rack = () => engine.rack;

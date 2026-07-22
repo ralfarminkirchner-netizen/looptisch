@@ -47,7 +47,7 @@
   // ——— chains (Prozessketten) ———
   const state = { lastForge: null, lastEssence: null, busy: false };
 
-  async function runChain(name, steps) {
+  async function runChain(name, steps, opts = {}) {
     if (state.busy) { LT.toast('Co-Pilot arbeitet schon…'); return null; }
     state.busy = true;
     LT.addMsg('Co-Pilot', `Kette: ${name} (${steps.length} Schritte)`);
@@ -59,6 +59,13 @@
         await sleep(120);
       }
       LT.toast('✓ ' + name);
+      // hörbar machen: Ergebnis spielt sofort, nicht nur Text
+      if (opts.autoplay !== false && !LT.transport.playing) {
+        LT.engine.ensure();
+        LT.transport.toggle();
+        LT.renderAll();
+        LT.toast('▶ hör rein — ' + name);
+      }
       return out;
     } catch (err) {
       LT.addMsg('Co-Pilot', `Kette ${name} Fail: ${err.message || err}`);

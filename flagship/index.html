@@ -79,6 +79,7 @@
           <div class="vu-track"><i id="mR"></i></div>
         </div>
         <div class="mode-seg" role="tablist">
+          <button type="button" data-mode="pandrum" role="tab" aria-selected="false">PANDRUM</button>
           <button type="button" class="on" data-mode="perform" role="tab" aria-selected="true">PADS</button>
           <button type="button" data-mode="arrange" role="tab" aria-selected="false">ARRANGE</button>
           <button type="button" data-mode="chop" role="tab" aria-selected="false">CHOP</button>
@@ -141,6 +142,10 @@
             <button type="button" class="mini accent" id="btnPlanPlay">▶ HÖREN</button>
           </div>
         </div>
+
+        <section class="view" id="viewPandrum" data-view="pandrum" hidden>
+          <div id="pandrumRoot"></div>
+        </section>
 
         <section class="view on" id="viewPerform" data-view="perform">
           <div class="deck-head">
@@ -382,6 +387,7 @@
   <script src="essence.js"></script>
   <script src="forge.js"></script>
   <script src="neural.js"></script>
+  <script src="pandrum.js"></script>
   <script src="copilot.js"></script>
   <script src="engine.js"></script>
   <script src="coop.js"></script>
